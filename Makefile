@@ -1,7 +1,7 @@
 CC=gcc
 
 LFLAGS=
-CFLAGS=-Wall -Werror -Wextra -c -pedantic -g -lcheck
+CFLAGS=-Wall -Werror -Wextra -c -pedantic -g
 
 ODIR = obj/
 MAIN_C = test_s21_string.c
@@ -15,7 +15,7 @@ TEST_O = $(TEST_C:%.c=$(ODIR)%.o)
 
 all: test_s21
 test_s21: $(ODIR) $(MAIN_O) $(UTILS_O)
-	$(CC) $(LFLAGS) $(MAIN_O) $(UTILS_O) -o ./test_s21
+	$(CC) $(LFLAGS) $(MAIN_O) $(UTILS_O) -lcheck -lm -lsubunit -o ./test_s21
 $(ODIR):
 	@mkdir -p $(ODIR)
 	@echo "folder: $(GREEN)$(ODIR) was created$(RESET)"
@@ -29,11 +29,13 @@ $(TEST_O): $(TEST_C) $(MAIN_H)
 
 test: simple_test
 simple_test: $(ODIR) $(TEST_O) $(UTILS_O)
-	$(CC) $(LFLAGS) $(TEST_O) $(UTILS_O) -o ./simple_test
+	$(CC) $(LFLAGS) $(TEST_O) $(UTILS_O) -lcheck -lm -lsubunit -o ./simple_test
 
 clang:
 	clang-format -i $(MAIN_C) $(UTILS_C) $(MAIN_H)
 
 clean:
 	rm -rf $(ODIR)*.o
-	rm -rf ./test_s21
+	rm -rf ./test_s21 ./simple_test
+
+.PHONY: test_s21 simple_test

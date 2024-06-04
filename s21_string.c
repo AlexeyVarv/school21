@@ -22,14 +22,3 @@ char *s21_strchr(const char *str, int c) {
     
     return NULL; // Символ не найден
 }
-
-char *s21_strchr_2(const char *str, int c) {
-    const char *p = str;
-    while(*p) {
-        if (*p == c) {
-            break;
-        }
-        p++;
-    }
-    return (char*)p;
-}
