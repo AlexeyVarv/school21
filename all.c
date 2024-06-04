@@ -51,7 +51,6 @@ int main() {
         // Сигнализируем о том, что тестирование прошло неудачно.
         return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 
     return 0;
