@@ -12,13 +12,42 @@ char *s21_strchr(const char *str, int c) {
     if (str == NULL) {
         return NULL;
     }
-    
+    if (c == 0) {
+        return (char*)(str + s21_strlen(str));
+    }
     while(*str) {
         if (*str == c) {
-            return (char*)str; // Возвращаем указатель на найденный символ
+            return (char*)str;
         }
         str++;
     }
     
-    return NULL; // Символ не найден
+    return NULL;
+}
+
+int s21_strncmp(const char *str1, const char *str2, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        if (str1[i] != str2[i]) {
+            return str1[i] - str2[i];
+        }
+    }
+    return 0;
+}
+
+char* s21_strncat(char *dest, const char *src, size_t n) {
+    char *p = dest;
+    while(*p) {
+        p++;
+    }
+    size_t i = 0;
+    while(*src) {
+        if (i >= n) {
+            break;
+        }
+        *p++ = *src++;
+        i++;
+    }
+    *p = '\0';
+
+    return dest;
 }
