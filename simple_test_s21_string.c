@@ -22,12 +22,27 @@ int main() {
         printf("TEST STRCHR FAIL\n");
     }
 
-    char *testString2 = "Hell";
+    char *testString2 = "Goot Morgen";
     printf("%d\n", s21_strncmp(testString, testString2, 4));
+    printf("%d\n", strncmp(testString, testString2, 4));
+
+
+    char testString1_1[20] = "Hello";
     
-    printf("%s\n", strncat(testString, testString2, 0));
+    char c1[] = " man!", c2[] = "OK", c3[] = "", c4[] = "!";
+    printf("%s\n", s21_strncat(testString1_1, c1, 4));
     
-    printf("%s\n", s21_strncat(testString, testString2, 10));
+    printf("%s\n", s21_strncat(testString1_1, c2, 5));
+    
+    printf("%s\n", s21_strncat(testString1_1, c3, 5));
+    printf("%s\n", strncat(testString1_1, c3, 5));
+    printf("%s\n", s21_strncat(testString1_1, c4, 0));
+    printf("%s\n", strncat(testString1_1, c4, 0));
+    //printf("%s\n", strncpy(testString, testString2, 2));
+    
+    //printf("%s\n", s21_strncpy(testString, testString2, 0));
+
+
 
     return 0;
 }

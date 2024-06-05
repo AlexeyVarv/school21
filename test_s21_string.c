@@ -4,37 +4,69 @@
 START_TEST(test_strlen)
 {
   /* Исходный код теста. */
-    char *testString = "Hello";
-    ck_assert_int_eq(s21_strlen(testString), 5);
+    char *testString1 = "Hello";
+    ck_assert_int_eq(s21_strlen(testString1), 5);
+    char *testString2 = "";
+    ck_assert_int_eq(s21_strlen(testString2), 0);
+    char *testString3 = "A";
+    ck_assert_int_eq(s21_strlen(testString3), 1);
+    char *testString4 = "Umbrella corporation!";
+    ck_assert_int_eq(s21_strlen(testString4), 21);
+    char *testString5 = "Oops\n";
+    ck_assert_int_eq(s21_strlen(testString5), 5);
 }
 END_TEST
 
 START_TEST(test_strchr)
 {
   /* Исходный код теста. */
-    char *testString = "Hello";
-    char *reference;
-    char *testResult;
-    char c = 'e';
-    reference = strchr(testString, c);
-    testResult = s21_strchr(testString, c);
-      
-    ck_assert_int_eq(strcmp(testResult, reference), 0);
+    char *testString1 = "Hello";
+    char c1 = 'e', c2 = '\0', c3 = 'm', c4 = ' ';
+    ck_assert_str_eq(s21_strchr(testString1, c1), strchr(testString1, c1));
+    ck_assert_str_eq(s21_strchr(testString1, c2), strchr(testString1, c2));
+    ck_assert_ptr_eq(s21_strchr(testString1, c3), strchr(testString1, c3));
+    char *testString2 = "";
+    ck_assert_ptr_eq(s21_strchr(testString2, c1), strchr(testString2, c1));
+    ck_assert_str_eq(s21_strchr(testString2, c2), strchr(testString2, c2));
+    char *testString3 = "Umbrella corporation!";
+    ck_assert_str_eq(s21_strchr(testString3, c1), strchr(testString3, c1));
+    ck_assert_str_eq(s21_strchr(testString3, c2), strchr(testString3, c2));
+    ck_assert_ptr_eq(s21_strchr(testString3, c3), strchr(testString3, c3));
+    ck_assert_str_eq(s21_strchr(testString3, c4), strchr(testString3, c4));
+}
+END_TEST
+
+START_TEST(test_strncat)
+{
+  /* Исходный код теста. */
+    char testString1_1[20] = "Hello";
+    char testString1_2[20] = "Hello";
+    char c1[] = " man!", c2[] = "\nOK", c3[] = "", c4[] = "!";
+    ck_assert_str_eq(s21_strncat(testString1_1, c1, 4), strncat(testString1_2, c1, 4));
+    ck_assert_str_eq(s21_strncat(testString1_1, c2, 5), strncat(testString1_2, c2, 5));
+    ck_assert_str_eq(s21_strncat(testString1_1, c3, 1), strncat(testString1_2, c3, 1));
+    ck_assert_str_eq(s21_strncat(testString1_1, c4, 0), strncat(testString1_2, c4, 0));
+    char testString2_1[10] = "";
+    char testString2_2[10] = "";
+    ck_assert_str_eq(s21_strncat(testString2_1, c1, 4), strncat(testString2_2, c1, 4));
+    ck_assert_str_eq(s21_strncat(testString2_1, c2, 5), strncat(testString2_2, c2, 5));
 }
 END_TEST
 
 Suite *example_suite_create(void)
 {
-    Suite *suite = suite_create("Example");
+    Suite *suite = suite_create("MyStrings&Sscanf");
     // Набор разбивается на группы тестов, разделённых по каким-либо критериям.
-    TCase *tcase_core = tcase_create("Core of example");
-    
+    TCase *tcase_core_strings = tcase_create("Core of strings");
+    TCase *tcase_core_sscanf = tcase_create("Core of sscanf");
     // Добавление теста в группу тестов.
-    tcase_add_test(tcase_core, test_strlen);
-    tcase_add_test(tcase_core, test_strchr);
+    tcase_add_test(tcase_core_strings, test_strlen);
+    tcase_add_test(tcase_core_strings, test_strchr);
+    tcase_add_test(tcase_core_strings, test_strncat);
     
     // Добавление теста в тестовый набор.
-    suite_add_tcase(suite, tcase_core);
+    suite_add_tcase(suite, tcase_core_strings);
+    suite_add_tcase(suite, tcase_core_sscanf);
     
     return suite;
 }

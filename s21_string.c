@@ -51,3 +51,21 @@ char* s21_strncat(char *dest, const char *src, size_t n) {
 
     return dest;
 }
+
+char* s21_strncpy(char *dest, const char *src, size_t n) {
+    char *p = dest;
+    size_t i = 0;
+    while(*src) {
+        if (i >= n) {
+            break;;
+        }
+        *p++ = *src++;
+        i++;
+    }
+    while(*p) {
+        p++;
+    }
+    *p = '\0';
+
+    return dest;
+}
