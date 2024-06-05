@@ -3,7 +3,6 @@
 
 START_TEST(test_strlen)
 {
-  /* Исходный код теста. */
     char *testString1 = "Hello";
     ck_assert_int_eq(s21_strlen(testString1), 5);
     char *testString2 = "";
@@ -19,7 +18,6 @@ END_TEST
 
 START_TEST(test_strchr)
 {
-  /* Исходный код теста. */
     char *testString1 = "Hello";
     char c1 = 'e', c2 = '\0', c3 = 'm', c4 = ' ';
     ck_assert_str_eq(s21_strchr(testString1, c1), strchr(testString1, c1));
@@ -38,7 +36,6 @@ END_TEST
 
 START_TEST(test_strncat)
 {
-  /* Исходный код теста. */
     char testString1_1[20] = "Hello";
     char testString1_2[20] = "Hello";
     char c1[] = " man!", c2[] = "\nOK", c3[] = "", c4[] = "!";
@@ -53,6 +50,38 @@ START_TEST(test_strncat)
 }
 END_TEST
 
+START_TEST(test_strncpy)
+{
+    char testString1_1[20] = "Hello";
+    char testString1_2[20] = "Hello";
+    char c1[] = " man!", c2[] = "darling", c3[] = "", c4[] = "!";
+    ck_assert_str_eq(s21_strncpy(testString1_1, c1, 3), strncpy(testString1_2, c1, 3));
+    ck_assert_str_eq(s21_strncpy(testString1_1, c2, 10), strncpy(testString1_2, c2, 10));
+    ck_assert_str_eq(s21_strncpy(testString1_1, c3, 1), strncpy(testString1_2, c3, 1));
+    ck_assert_str_eq(s21_strncpy(testString1_1, c4, 1), strncpy(testString1_2, c4, 1));
+    char testString2_1[10] = "";
+    char testString2_2[10] = "";
+    ck_assert_str_eq(s21_strncpy(testString2_1, c1, 4), strncpy(testString2_2, c1, 4));
+    ck_assert_str_eq(s21_strncpy(testString2_1, c2, 10), strncpy(testString2_2, c2, 10));
+}
+END_TEST
+
+START_TEST(test_strncmp)
+{
+    char *testString1 = "Hello";
+    char c1[] = "Hello", c2[] = "darling", c3[] = "", c4[] = "Hello!";
+    ck_assert_int_eq(s21_strncmp(testString1, c1, 5), strncmp(testString1, c1, 5));
+    ck_assert_int_eq(s21_strncmp(testString1, c2, 5), strncmp(testString1, c2, 5));
+    ck_assert_int_eq(s21_strncmp(testString1, c3, 2), strncmp(testString1, c3, 2));
+    ck_assert_int_eq(s21_strncmp(testString1, c4, 6), strncmp(testString1, c4, 6));
+    char *testString2 = "";
+    ck_assert_int_eq(s21_strncmp(testString2, c1, 5), strncmp(testString2, c1, 5));
+    ck_assert_int_eq(s21_strncmp(testString2, c2, 5), strncmp(testString2, c2, 5));
+    ck_assert_int_eq(s21_strncmp(testString2, c3, 1), strncmp(testString2, c3, 1));
+    ck_assert_int_eq(s21_strncmp(testString2, c4, 6), strncmp(testString2, c4, 6));
+}
+END_TEST
+
 Suite *example_suite_create(void)
 {
     Suite *suite = suite_create("MyStrings&Sscanf");
@@ -63,7 +92,9 @@ Suite *example_suite_create(void)
     tcase_add_test(tcase_core_strings, test_strlen);
     tcase_add_test(tcase_core_strings, test_strchr);
     tcase_add_test(tcase_core_strings, test_strncat);
-    
+    tcase_add_test(tcase_core_strings, test_strncpy);
+    tcase_add_test(tcase_core_strings, test_strncmp);
+
     // Добавление теста в тестовый набор.
     suite_add_tcase(suite, tcase_core_strings);
     suite_add_tcase(suite, tcase_core_sscanf);

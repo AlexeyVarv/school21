@@ -55,13 +55,13 @@ char* s21_strncat(char *dest, const char *src, size_t n) {
 char* s21_strncpy(char *dest, const char *src, size_t n) {
     char *p = dest;
     size_t i = 0;
-    while(*src) {
+    do {
         if (i >= n) {
             break;;
         }
         *p++ = *src++;
         i++;
-    }
+    } while(*src);
     while(*p) {
         p++;
     }
