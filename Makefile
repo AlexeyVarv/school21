@@ -1,7 +1,8 @@
 CC=gcc
 
-LFLAGS=
-CFLAGS=-Wall -Werror -Wextra -c -pedantic -g
+LFLAGS=-lcheck -lm -lsubunit -lrt -lpthread -lgcov
+CFLAGS=-Wall -Werror -Wextra -c -pedantic -g -std=c11
+CFLAGSG=-Wall -Werror -Wextra -c -pedantic -g -std=c11 -fprofile-arcs -ftest-coverage
 
 ODIR = obj/
 MAIN_C = test_s21_string.c
@@ -15,7 +16,7 @@ TEST_O = $(TEST_C:%.c=$(ODIR)%.o)
 
 all: test_s21
 test_s21: $(ODIR) $(MAIN_O) $(UTILS_O)
-	$(CC) $(LFLAGS) $(MAIN_O) $(UTILS_O) -lcheck -lm -lsubunit -o ./test_s21
+	$(CC) $(MAIN_O) $(UTILS_O) $(LFLAGS) -o ./test_s21
 $(ODIR):
 	@mkdir -p $(ODIR)
 	@echo "folder: $(GREEN)$(ODIR) was created$(RESET)"
@@ -23,19 +24,22 @@ $(ODIR):
 $(MAIN_O): $(MAIN_C) $(MAIN_H)
 	$(CC) $(CFLAGS) -o $@ $<
 $(UTILS_O): $(UTILS_C) $(MAIN_H)
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGSG) -o $@ $<
 $(TEST_O): $(TEST_C) $(MAIN_H)
 	$(CC) $(CFLAGS) -o $@ $<
 
 test: simple_test
 simple_test: $(ODIR) $(TEST_O) $(UTILS_O)
-	$(CC) $(LFLAGS) $(TEST_O) $(UTILS_O) -lcheck -lm -lsubunit -o ./simple_test
+	$(CC) $(TEST_O) $(UTILS_O) $(LFLAGS) -o ./simple_test
+
+gcov_report:
+	gcovr -r . --html --html-details -o covarege_report.html	
 
 clang:
 	clang-format -i $(MAIN_C) $(UTILS_C) $(MAIN_H)
 
 clean:
-	rm -rf $(ODIR)*.o
+	rm -rf $(ODIR)*.o $(ODIR)*.gcda $(ODIR)*.gcno
 	rm -rf ./test_s21 ./simple_test
 
 .PHONY: test_s21 simple_test
