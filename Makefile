@@ -33,7 +33,7 @@ simple_test: $(ODIR) $(TEST_O) $(UTILS_O)
 	$(CC) $(TEST_O) $(UTILS_O) $(LFLAGS) -o ./simple_test
 
 gcov_report:
-	gcovr -r $(ODIR) -f my_program/string_project/s21_string.c --html --html-details -o covarege_report.html	
+	gcovr -r . --html --html-details  --object-directory obj -o covarege_report.html	
 
 clang:
 	clang-format -i $(MAIN_C) $(UTILS_C) $(MAIN_H)
