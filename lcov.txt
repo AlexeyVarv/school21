@@ -3,3 +3,7 @@ lcov_report:
 	lcov --capture --directory . --output-file a_out_lcov_test.info
 	lcov --add-tracefile a_out_lcov_base.info --add-tracefile a_out_lcov_test.info --output-file a_out_lcov_total.info
 	genhtml a_out_lcov_total.info --output-directory a_out_lcov_html --demangle-cpp --legend --title "Cpp basic gcov test"
+
+lcov_var_2:
+	lcov -t "obj" -o test_rez.info -c -d .
+	genhtml -o report test_rez.info	
