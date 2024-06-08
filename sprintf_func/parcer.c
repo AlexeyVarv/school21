@@ -25,6 +25,9 @@ typedef struct {
     int width;
     int precision;
     Lenght lenght;
+    const char* strFlags;
+    const char* strfLengthDescription;
+    const char* variantsSpecifiers;
 } Specifiers;
 
 
@@ -32,40 +35,38 @@ void itoa(int i, char *b);
 
 int s21_sprintf(char *buffer, const char *fmt, ...);
 
-void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char* strfLengthDescription, Specifiers *specifiers);
+void parseSpecifiers(const char* strSpecifiers, Specifiers *specifiers);
 
 void print_specifiers(const Specifiers *specifiers);
 
 void reset_specifiers(Specifiers *specifiers);
 
-void checkSpecifiersParameters(const char* strSpec, const char* varSpec);
+void checkSpecifiersParameters(const char* strSpec, Specifiers *specifiers);
 
 int main (void) {
-    const char* strFlags = "-+ 0#";
-    const char* strfLengthDescription = "hlL";
-    const char* variantsSpecifiers = ". -+#0123456789hlL";
-    Specifiers specifiers = {0};
+    Specifiers specifiers;
+    reset_specifiers(&specifiers);
 
-    const char* parsedStr = "+11h";
-    checkSpecifiersParameters(parsedStr, variantsSpecifiers);
-    parseSpecifiers(parsedStr, strFlags, strfLengthDescription, &specifiers);
+    const char* parsedStr = "+11.2L";
+    checkSpecifiersParameters(parsedStr, &specifiers);
+    parseSpecifiers(parsedStr, &specifiers);
     print_specifiers(&specifiers);
 
     printf("-----------\n");
     reset_specifiers(&specifiers);
 
-    const char* parsedStr2 = " 12.8l";
-    parseSpecifiers(parsedStr2, strFlags, strfLengthDescription, &specifiers);
+    const char* parsedStr2 = "+";
+    parseSpecifiers(parsedStr2, &specifiers);
     print_specifiers(&specifiers);
 
     return 0;
 }
 
-void checkSpecifiersParameters(const char* strSpec, const char* varSpec) {
+void checkSpecifiersParameters(const char* strSpec, Specifiers *specifiers) {
     const char *p = strSpec;
     while (*p)
     {
-        if (!strchr(varSpec, *p)) {
+        if (!strchr(specifiers->variantsSpecifiers, *p)) {
             perror("Unvalid specifiers");
             exit(1);
         }
@@ -73,7 +74,7 @@ void checkSpecifiersParameters(const char* strSpec, const char* varSpec) {
     }
 }
 
-void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char* strfLengthDescription, Specifiers *specifiers) {
+void parseSpecifiers(const char* strSpecifiers, Specifiers *specifiers) {
     const char *p = strSpecifiers;
     char strWidth[20] = "0";
     int widthIndex = 0;
@@ -81,7 +82,7 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
     int precisionIndex = 0;
     size_t countPrecision = 0;
     while(*p) {
-        if (strchr(strFlags, *p)) {
+        if (strchr(specifiers->strFlags, *p)) {
             switch(*p) {
             case '-': 
                 specifiers->flags.letSideFlag = 1;
@@ -120,7 +121,7 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
             countPrecision++;
         }
         strPrecision[precisionIndex] = '\0';
-        if (strchr(strfLengthDescription, *p)) {
+        if (*p != '\0' && strchr(specifiers->strfLengthDescription, *p)) {
             switch(*p) {
             case 'h': 
                 specifiers->lenght.shortFlag = 1;
@@ -133,8 +134,9 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
                 break;
             }
             countPrecision++;
+            p++;
+            break;
         }
-        p++;
     }
     if (strWidth[0]) {
         specifiers->width = strtol(strWidth, NULL, 10);
@@ -176,4 +178,7 @@ void reset_specifiers(Specifiers *specifiers) {
     specifiers->lenght.shortFlag = 0;
     specifiers->lenght.longIntFlag = 0;
     specifiers->lenght.longDoubleFlag = 0;
+    specifiers->strFlags = "-+ 0#";
+    specifiers->strfLengthDescription = "hlL";
+    specifiers->variantsSpecifiers = ". -+#0123456789hlL";
 }
