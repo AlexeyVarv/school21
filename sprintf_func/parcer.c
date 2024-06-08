@@ -36,23 +36,41 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
 
 void print_specifiers(const Specifiers *specifiers);
 
-int main (void)
-{
+void reset_specifiers(Specifiers *specifiers);
+
+void checkSpecifiersParameters(const char* strSpec, const char* varSpec);
+
+int main (void) {
     const char* strFlags = "-+ 0#";
     const char* strfLengthDescription = "hlL";
+    const char* variantsSpecifiers = ". -+#0123456789hlL";
     Specifiers specifiers = {0};
 
     const char* parsedStr = "+11h";
+    checkSpecifiersParameters(parsedStr, variantsSpecifiers);
     parseSpecifiers(parsedStr, strFlags, strfLengthDescription, &specifiers);
     print_specifiers(&specifiers);
 
     printf("-----------\n");
+    reset_specifiers(&specifiers);
 
-    const char* parsedStr2 = "!12.8l";
+    const char* parsedStr2 = " 12.8l";
     parseSpecifiers(parsedStr2, strFlags, strfLengthDescription, &specifiers);
     print_specifiers(&specifiers);
 
     return 0;
+}
+
+void checkSpecifiersParameters(const char* strSpec, const char* varSpec) {
+    const char *p = strSpec;
+    while (*p)
+    {
+        if (!strchr(varSpec, *p)) {
+            perror("Unvalid specifiers");
+            exit(1);
+        }
+        p++;
+    }
 }
 
 void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char* strfLengthDescription, Specifiers *specifiers) {
@@ -61,6 +79,7 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
     int widthIndex = 0;
     char strPrecision[20] = "0";
     int precisionIndex = 0;
+    size_t countPrecision = 0;
     while(*p) {
         if (strchr(strFlags, *p)) {
             switch(*p) {
@@ -81,20 +100,24 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
                 break;
             }
             p++;
+            countPrecision++;
         }
         while(isdigit(*p)) {
             strWidth[widthIndex] = *p;
             widthIndex++;
             p++;
+            countPrecision++;
         }
         strWidth[widthIndex] = '\0';
         if (*p == '.') {
             p++;
+            countPrecision++;
         }
         while(isdigit(*p)) {
             strPrecision[precisionIndex] = *p;
             precisionIndex++;
             p++;
+            countPrecision++;
         }
         strPrecision[precisionIndex] = '\0';
         if (strchr(strfLengthDescription, *p)) {
@@ -109,6 +132,7 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
                 specifiers->lenght.longDoubleFlag = 1;
                 break;
             }
+            countPrecision++;
         }
         p++;
     }
@@ -117,6 +141,11 @@ void parseSpecifiers(const char* strSpecifiers, const char* strFlags, const char
     }
     if (strPrecision[0]) {
         specifiers->precision = strtol(strPrecision, NULL, 10);
+    }
+    printf("+++%ld+++\n", countPrecision);
+    if (countPrecision != strlen(strSpecifiers)) {
+        perror("Error specifiers");
+        exit(1);
     }
 }
 
@@ -133,4 +162,18 @@ void print_specifiers(const Specifiers *specifiers) {
     printf("ShortFlag: %d\n", specifiers->lenght.shortFlag);
     printf("LongIntFlag: %d\n", specifiers->lenght.longIntFlag);
     printf("LongDoubleFlag: %d\n", specifiers->lenght.longDoubleFlag);
+}
+
+//Сброс структуры спецификатора в ноль
+void reset_specifiers(Specifiers *specifiers) {
+    specifiers->flags.letSideFlag = 0;
+    specifiers->flags.signFlag = 0;
+    specifiers->flags.spaseFlag = 0;
+    specifiers->flags.zeroFlag = 0;
+    specifiers->flags.sharpFlag = 0;
+    specifiers->width = 0;
+    specifiers->precision = 0;
+    specifiers->lenght.shortFlag = 0;
+    specifiers->lenght.longIntFlag = 0;
+    specifiers->lenght.longDoubleFlag = 0;
 }
