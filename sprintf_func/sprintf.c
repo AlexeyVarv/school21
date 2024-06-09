@@ -65,6 +65,7 @@ int main (void) {
 
 
 int s21_sprintf(char *buffer, const char *format, ...) {
+    char* start = buffer;
     Specifiers specifiers;
     va_list ap;
     va_start(ap, format);
@@ -103,8 +104,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
     }
     va_end(ap);
     *buffer = '\0';
-
-    return (int)(strlen(buffer));
+    return (buffer - 1) - start;
 }
 
 //Проверка спецификатора на невалидный символ и неверное расположение параметров
