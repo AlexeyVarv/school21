@@ -49,16 +49,21 @@ void resetSpecifiers(Specifiers *specifiers);
 
 void checkSpecifiersParameters(Specifiers *specifiers, size_t *count);
 
+void converseIntType(Specifiers *specifiers, char* buffer, va_list ap);
+
 
 int main (void) {
-    int age = 308;
-    int age1 = 418;
+    long int a = 308;
+    long int b = 418;
     char text[50];
     
-    int charNumber = s21_sprintf(text, "MAX Name: Age: %+20.2d %+5.2ld!\n", age, age1);  
-    printf ("%s\n", text);  // Name: Tom  Age: 38
-    printf("text length: %d\n", charNumber);  // text length: 19
-
+    int charNumber = s21_sprintf(text, "MAX Name: Age: %li %li!\n", a, b);  
+    printf ("Mysprintf: %s\n", text);
+    printf("text length: %d\n", charNumber);
+    
+    charNumber = sprintf(text, "MAX Name: Age: %d %ld!\n", a, b);
+    printf ("Control: %s\n", text);
+    printf("text length: %d\n", charNumber);
 
     return 0;
 }
@@ -86,15 +91,20 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             case 'd':
                 int a = va_arg(ap, int);
                 //char int_buffer[33];
-                
                 itoa(a, int_buffer);
                 *buffer = '\0';
                 strncat(buffer, int_buffer, 33);
                 buffer += 2;
                 printf("***Number: %s\n", int_buffer);
-                
                 break;
-            
+            case 'i':
+                char hex_buffer[33];
+                converseIntType(&specifiers, hex_buffer, ap);
+                *buffer = '\0';
+                strncat(buffer, hex_buffer, 33);
+                buffer += 2;
+                printf("***Number: %s\n", hex_buffer);
+                break;
             default:
                 break;
             }
@@ -104,7 +114,36 @@ int s21_sprintf(char *buffer, const char *format, ...) {
     }
     va_end(ap);
     *buffer = '\0';
-    return (buffer - 1) - start;
+    return buffer - start;
+}
+
+void converseIntType(Specifiers *specifiers, char* buffer, va_list ap) {
+    int a;
+    if (specifiers->lenght.longIntFlag) {
+        a = va_arg(ap, long int);
+        a = (long int)a;
+    } else {
+        a = va_arg(ap, int);
+    }
+    
+    const char digit[] = "0123456789";
+    char* p = buffer;
+    if(a < 0){
+        *p++ = '-';
+        a *= -1;
+    }
+    int shifter = a;
+    do{ //Move to where representation ends
+        ++p;
+        shifter = shifter / 10;
+    }while(shifter);
+    *p = '\0';
+    do{ //Move back, inserting digits as u go
+        *--p = digit[a % 10];
+        a = a / 10;
+    }while(a);
+    
+    
 }
 
 //Проверка спецификатора на невалидный символ и неверное расположение параметров
