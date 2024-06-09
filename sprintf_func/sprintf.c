@@ -29,6 +29,7 @@ typedef struct {
     const char* strfLengthDescription;
     const char* variantsSpecifiers;
     const char* typeSymbols;
+    char specifiersString[50];
 } Specifiers;
 
 
@@ -36,34 +37,25 @@ int s21_sprintf(char *buffer, const char *format, ...);
 
 int isTypeSymbol(Specifiers *specifiers, char c);
 
-const char* makeSpecifires(const char* buffer, Specifiers *specifiers, char* dest);
+const char* makeSpecifires(const char* buffer, Specifiers *specifiers);
 
 void itoa(int i, char *b);
 
-void parseSpecifiers(const char* strSpecifiers, Specifiers *specifiers);
+void parseSpecifiers(Specifiers *specifiers);
 
-void print_specifiers(const Specifiers *specifiers);
+void printSpecifiers(const Specifiers *specifiers);
 
-void reset_specifiers(Specifiers *specifiers);
+void resetSpecifiers(Specifiers *specifiers);
 
-void checkSpecifiersParameters(const char* strSpec, Specifiers *specifiers);
+void checkSpecifiersParameters(Specifiers *specifiers, size_t *count);
+
 
 int main (void) {
-    Specifiers specifiers;
-    reset_specifiers(&specifiers);
-
-    const char* parsedStr = "+11.2L";
-    checkSpecifiersParameters(parsedStr, &specifiers);
-    parseSpecifiers(parsedStr, &specifiers);
-    print_specifiers(&specifiers);
-
-    printf("-----------\n");
-    
     int age = 308;
     int age1 = 418;
     char text[50];
     
-    int charNumber = s21_sprintf (text, "MAX Name: Age: %20d %d!\n", age, age1);  
+    int charNumber = s21_sprintf(text, "MAX Name: Age: %+20.2d %+5.2ld!\n", age, age1);  
     printf ("%s\n", text);  // Name: Tom  Age: 38
     printf("text length: %d\n", charNumber);  // text length: 19
 
@@ -71,21 +63,23 @@ int main (void) {
     return 0;
 }
 
+
 int s21_sprintf(char *buffer, const char *format, ...) {
     Specifiers specifiers;
     va_list ap;
     va_start(ap, format);
-    char parsedString[50] = "0";
     while(*format) {
-        reset_specifiers(&specifiers);
+        resetSpecifiers(&specifiers);
         char int_buffer[33];
         if (*format != '%') {
             *buffer = *format;
         }
         if (*format == '%') {
             format++;
-            format = makeSpecifires(format, &specifiers, parsedString);
-            printf("+++%s+++\n", parsedString);
+            format = makeSpecifires(format, &specifiers);
+            parseSpecifiers(&specifiers);
+            printSpecifiers(&specifiers);
+            printf("***Spesifire: %s\n", specifiers.specifiersString);
             switch (*format)
             {
             case 'd':
@@ -96,7 +90,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
                 *buffer = '\0';
                 strncat(buffer, int_buffer, 33);
                 buffer += 2;
-                printf("---%s---", int_buffer);
+                printf("***Number: %s\n", int_buffer);
                 
                 break;
             
@@ -104,7 +98,6 @@ int s21_sprintf(char *buffer, const char *format, ...) {
                 break;
             }
         }
-        
         buffer++;
         format++;
     }
@@ -114,8 +107,9 @@ int s21_sprintf(char *buffer, const char *format, ...) {
     return (int)(strlen(buffer));
 }
 
-void checkSpecifiersParameters(const char* strSpec, Specifiers *specifiers) {
-    const char *p = strSpec;
+//Проверка спецификатора на невалидный символ и неверное расположение параметров
+void checkSpecifiersParameters(Specifiers *specifiers, size_t *count) {
+    const char *p = specifiers->specifiersString;
     while (*p)
     {
         if (!strchr(specifiers->variantsSpecifiers, *p)) {
@@ -124,10 +118,15 @@ void checkSpecifiersParameters(const char* strSpec, Specifiers *specifiers) {
         }
         p++;
     }
+    if (*count != strlen(specifiers->specifiersString)) {
+        perror("Error specifiers order");
+        exit(1);
+    }
 }
 
-void parseSpecifiers(const char* strSpecifiers, Specifiers *specifiers) {
-    const char *p = strSpecifiers;
+//
+void parseSpecifiers(Specifiers *specifiers) {
+    const char *p = specifiers->specifiersString;
     char strWidth[20] = "0";
     int widthIndex = 0;
     char strPrecision[20] = "0";
@@ -189,6 +188,7 @@ void parseSpecifiers(const char* strSpecifiers, Specifiers *specifiers) {
             p++;
             break;
         }
+        p++;
     }
     if (strWidth[0]) {
         specifiers->width = strtol(strWidth, NULL, 10);
@@ -196,14 +196,13 @@ void parseSpecifiers(const char* strSpecifiers, Specifiers *specifiers) {
     if (strPrecision[0]) {
         specifiers->precision = strtol(strPrecision, NULL, 10);
     }
-    printf("+++%ld+++\n", countPrecision);
-    if (countPrecision != strlen(strSpecifiers)) {
-        perror("Error specifiers");
-        exit(1);
-    }
+
+    checkSpecifiersParameters(specifiers, &countPrecision);
+    //printf("+++%ld+++\n", countPrecision);
 }
 
-void print_specifiers(const Specifiers *specifiers) {
+//Печать флагов, ширины, точности, длины
+void printSpecifiers(const Specifiers *specifiers) {
     printf("Flags:\n");
     printf("LetSideFlag: %d\n", specifiers->flags.letSideFlag);
     printf("SignFlag: %d\n", specifiers->flags.signFlag);
@@ -218,8 +217,8 @@ void print_specifiers(const Specifiers *specifiers) {
     printf("LongDoubleFlag: %d\n", specifiers->lenght.longDoubleFlag);
 }
 
-//Сброс структуры спецификатора в ноль
-void reset_specifiers(Specifiers *specifiers) {
+//Сброс структуры спецификатора в ноль, установка параметров
+void resetSpecifiers(Specifiers *specifiers) {
     specifiers->flags.letSideFlag = 0;
     specifiers->flags.signFlag = 0;
     specifiers->flags.spaseFlag = 0;
@@ -234,16 +233,21 @@ void reset_specifiers(Specifiers *specifiers) {
     specifiers->strfLengthDescription = "hlL";
     specifiers->variantsSpecifiers = ". -+#0123456789hlL";
     specifiers->typeSymbols = "cdieEfgGosuxXpn%";
+    specifiers->specifiersString[0] = '\0';
 }
 
-const char* makeSpecifires(const char* buffer, Specifiers *specifiers, char* dest) {
+const char* makeSpecifires(const char* buffer, Specifiers *specifiers) {
     const char* p = buffer;
+    int i = 0;
     while(*p) {
         if (isTypeSymbol(specifiers, *p)) {
             break;
         }
-        *dest++ = *p++; 
+        specifiers->specifiersString[i] = *p;
+        i++;
+        p++;
     }
+    specifiers->specifiersString[i] = '\0';
     return p;
 }
 
