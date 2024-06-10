@@ -55,15 +55,15 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType);
 
 
 int main (void) {
-    int a = 61508;
+    int a = -666;
     int b = 15508;
     char text[500];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %.5d Age: %+ld!", a, b);  
+    int charNumber = s21_sprintf(text, "MAX Name: % +d Age: %d!", a, b);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %d Age: %d!", a, b);
+    charNumber = sprintf(text, "MAX Name: % +d Age: %d!", a, b);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -125,15 +125,20 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
 char* converseIntType(Specifiers *specifiers, va_list ap) {
     char *buffer = malloc(50 * sizeof(char));
     int a;
+    const char digit[] = "0123456789";
+    char* p = buffer;
     if (specifiers->lenght.longIntFlag) {
         a = va_arg(ap, long int);
         a = (long int)a;
     } else {
         a = va_arg(ap, int);
     }
-    
-    const char digit[] = "0123456789";
-    char* p = buffer;
+    if (specifiers->flags.signFlag && a >= 0) {
+        *p++ = '+';
+    }
+    if (!specifiers->flags.signFlag && a >= 0 && specifiers->flags.spaseFlag) {
+        *p++ = ' ';
+    }
     if (a < 0) {
         *p++ = '-';
         a *= -1;
@@ -178,7 +183,7 @@ void parseSpecifiers(Specifiers *specifiers) {
     int precisionIndex = 0;
     size_t countPrecision = 0;
     while(*p) {
-        if (strchr(specifiers->strFlags, *p)) {
+        while (strchr(specifiers->strFlags, *p) && *p != '\0') {
             switch(*p) {
             case '-': 
                 specifiers->flags.letSideFlag = 1;
