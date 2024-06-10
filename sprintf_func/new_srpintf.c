@@ -59,11 +59,11 @@ int main (void) {
     int b = 15508;
     char text[500];
     
-    int charNumber = s21_sprintf(text, "MAX Name: % +d Age: %d!", a, b);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10.5d Age: %d!", a, b);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: % +d Age: %d!", a, b);
+    charNumber = sprintf(text, "MAX Name: %+d Age: %d!", a, b);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -88,7 +88,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             printSpecifiers(&specifiers);
                         
             bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format);
-            memmove(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
+            memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
             buffer+= strlen(bufferFromVariable);
             format++;
             free(bufferFromVariable);
@@ -238,6 +238,7 @@ void parseSpecifiers(Specifiers *specifiers) {
             p++;
             break;
         }
+        checkSpecifiersParameters(specifiers, &countPrecision);
     }
     if (strWidth[0]) {
         specifiers->width = strtol(strWidth, NULL, 10);
@@ -246,7 +247,7 @@ void parseSpecifiers(Specifiers *specifiers) {
         specifiers->precision = strtol(strPrecision, NULL, 10);
     }
     //printf("+++%ld+++\n", countPrecision);
-    checkSpecifiersParameters(specifiers, &countPrecision);
+    //checkSpecifiersParameters(specifiers, &countPrecision);
 }
 
 //Печать флагов, ширины, точности, длины
