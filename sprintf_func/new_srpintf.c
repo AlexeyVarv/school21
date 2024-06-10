@@ -51,17 +51,19 @@ void checkSpecifiersParameters(Specifiers *specifiers, size_t *count);
 
 char* converseIntType(Specifiers *specifiers, va_list ap);
 
+char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType);
+
 
 int main (void) {
-    int a = 308;
-    int b = 418;
-    char text[50];
+    int a = 61508;
+    int b = 15508;
+    char text[500];
     
-    int charNumber = s21_sprintf(text, "MAX Name: Age: %d %i!\n", a, b);  
+    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %i!", a, b);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
-    
-    charNumber = sprintf(text, "MAX Name: Age: %d %d!\n", a, b);
+    printf("\n");
+    charNumber = sprintf(text, "MAX Name: %d Age: %d!", a, b);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -73,64 +75,45 @@ int s21_sprintf(char *buffer, const char *format, ...) {
     char* start = buffer;
     Specifiers specifiers;
     va_list ap;
+
     va_start(ap, format);
     while(*format) {
         resetSpecifiers(&specifiers);
-        char int_buffer[33];
-        
         if (*format == '%') {
-            //char *hex_buffer;
+            char *bufferFromVariable;
             format++;
             format = makeSpecifires(format, &specifiers);
             parseSpecifiers(&specifiers);
+            
             printSpecifiers(&specifiers);
             printf("***Spesifire: %s\n", specifiers.specifiersString);
-            switch (*format)
-            {
-            case 'd':
-                int a = va_arg(ap, int);
-                itoa(a, int_buffer);
-                //*buffer = '\0';
-                strncat(buffer, int_buffer, 33);
-                buffer += 3;
-                printf("***Number: %s\n", int_buffer);
-                break;
-            case 'i':
-                //char *hex_buffer;
-                char *aq = converseIntType(&specifiers, ap);
-                //*buffer = '\0';
-                strncat(buffer, aq, 33);
-                buffer += strlen(aq);
-                printf("***Number: %s\n", aq);
-                free(aq);
-                break;
-            default:
-                break;
-            }
-            //strncat(buffer, int_buffer, 33);
-            //buffer+= strlen(int_buffer);
+            
+            bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format);
+            memmove(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
+            buffer+= strlen(bufferFromVariable);
+            format++;
+            free(bufferFromVariable);
         } else {
             *buffer++ = *format++;
         }
-        
-        //buffer++;
-        //format++;
     }
     va_end(ap);
     *buffer = '\0';
+
     return buffer - start;
 }
 
+//Проверят тип переменной, возвращает строку из переменной заданного типа
 char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
     char* result;
     switch (cType)
     {
     case 'd':
-        result = converseIntType(&specifiers, ap);
+        result = converseIntType(specifiers, ap);
         printf("***Number: %s\n", result);
         break;
     case 'i':
-        result = converseIntType(&specifiers, ap);
+        result = converseIntType(specifiers, ap);
         printf("***Number: %s\n", result);
         break;
     default:
@@ -139,6 +122,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
     return result;
 }
 
+//Переводит в строку тип int по заданным спецификаторам
 char* converseIntType(Specifiers *specifiers, va_list ap) {
     char *buffer = malloc(50 * sizeof(char));
     int a;
