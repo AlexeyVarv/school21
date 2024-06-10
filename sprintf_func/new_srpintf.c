@@ -86,8 +86,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             parseSpecifiers(&specifiers);
             
             printSpecifiers(&specifiers);
-            printf("***Spesifire: %s\n", specifiers.specifiersString);
-            
+                        
             bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format);
             memmove(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
             buffer+= strlen(bufferFromVariable);
@@ -259,6 +258,7 @@ void printSpecifiers(const Specifiers *specifiers) {
     printf("ShortFlag: %d\n", specifiers->lenght.shortFlag);
     printf("LongIntFlag: %d\n", specifiers->lenght.longIntFlag);
     printf("LongDoubleFlag: %d\n", specifiers->lenght.longDoubleFlag);
+    printf("***Spesifire: %s\n", specifiers->specifiersString);
 }
 
 //Сброс структуры спецификатора в ноль, установка параметров
