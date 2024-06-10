@@ -49,19 +49,19 @@ void resetSpecifiers(Specifiers *specifiers);
 
 void checkSpecifiersParameters(Specifiers *specifiers, size_t *count);
 
-void converseIntType(Specifiers *specifiers, char* buffer, va_list ap);
+char* converseIntType(Specifiers *specifiers, va_list ap);
 
 
 int main (void) {
-    long int a = 308;
-    long int b = 418;
+    int a = 308;
+    int b = 418;
     char text[50];
     
-    int charNumber = s21_sprintf(text, "MAX Name: Age: %li %li!\n", a, b);  
+    int charNumber = s21_sprintf(text, "MAX Name: Age: %d %i!\n", a, b);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     
-    charNumber = sprintf(text, "MAX Name: Age: %d %ld!\n", a, b);
+    charNumber = sprintf(text, "MAX Name: Age: %d %d!\n", a, b);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -77,10 +77,9 @@ int s21_sprintf(char *buffer, const char *format, ...) {
     while(*format) {
         resetSpecifiers(&specifiers);
         char int_buffer[33];
-        if (*format != '%') {
-            *buffer = *format;
-        }
+        
         if (*format == '%') {
+            //char *hex_buffer;
             format++;
             format = makeSpecifires(format, &specifiers);
             parseSpecifiers(&specifiers);
@@ -90,34 +89,58 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             {
             case 'd':
                 int a = va_arg(ap, int);
-                //char int_buffer[33];
                 itoa(a, int_buffer);
-                *buffer = '\0';
+                //*buffer = '\0';
                 strncat(buffer, int_buffer, 33);
-                buffer += 2;
+                buffer += 3;
                 printf("***Number: %s\n", int_buffer);
                 break;
             case 'i':
-                char hex_buffer[33];
-                converseIntType(&specifiers, hex_buffer, ap);
-                *buffer = '\0';
-                strncat(buffer, hex_buffer, 33);
-                buffer += 2;
-                printf("***Number: %s\n", hex_buffer);
+                //char *hex_buffer;
+                char *aq = converseIntType(&specifiers, ap);
+                //*buffer = '\0';
+                strncat(buffer, aq, 33);
+                buffer += strlen(aq);
+                printf("***Number: %s\n", aq);
+                free(aq);
                 break;
             default:
                 break;
             }
+            //strncat(buffer, int_buffer, 33);
+            //buffer+= strlen(int_buffer);
+        } else {
+            *buffer++ = *format++;
         }
-        buffer++;
-        format++;
+        
+        //buffer++;
+        //format++;
     }
     va_end(ap);
     *buffer = '\0';
     return buffer - start;
 }
 
-void converseIntType(Specifiers *specifiers, char* buffer, va_list ap) {
+char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
+    char* result;
+    switch (cType)
+    {
+    case 'd':
+        result = converseIntType(&specifiers, ap);
+        printf("***Number: %s\n", result);
+        break;
+    case 'i':
+        result = converseIntType(&specifiers, ap);
+        printf("***Number: %s\n", result);
+        break;
+    default:
+        break;
+    }
+    return result;
+}
+
+char* converseIntType(Specifiers *specifiers, va_list ap) {
+    char *buffer = malloc(50 * sizeof(char));
     int a;
     if (specifiers->lenght.longIntFlag) {
         a = va_arg(ap, long int);
@@ -128,22 +151,22 @@ void converseIntType(Specifiers *specifiers, char* buffer, va_list ap) {
     
     const char digit[] = "0123456789";
     char* p = buffer;
-    if(a < 0){
+    if (a < 0) {
         *p++ = '-';
         a *= -1;
     }
     int shifter = a;
-    do{ //Move to where representation ends
+    do { //Move to where representation ends
         ++p;
         shifter = shifter / 10;
-    }while(shifter);
+    } while(shifter);
     *p = '\0';
-    do{ //Move back, inserting digits as u go
+    do { //Move back, inserting digits as u go
         *--p = digit[a % 10];
         a = a / 10;
-    }while(a);
+    } while(a);
     
-    
+    return buffer;
 }
 
 //Проверка спецификатора на невалидный символ и неверное расположение параметров
