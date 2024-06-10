@@ -59,7 +59,7 @@ int main (void) {
     int b = 15508;
     char text[500];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %i!", a, b);  
+    int charNumber = s21_sprintf(text, "MAX Name: %.5d Age: %+ld!", a, b);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
@@ -218,7 +218,7 @@ void parseSpecifiers(Specifiers *specifiers) {
             countPrecision++;
         }
         strPrecision[precisionIndex] = '\0';
-        if (*p != '\0' && strchr(specifiers->strfLengthDescription, *p)) {
+        if (strchr(specifiers->strfLengthDescription, *p) && *p != '\0') {
             switch(*p) {
             case 'h': 
                 specifiers->lenght.shortFlag = 1;
@@ -234,7 +234,6 @@ void parseSpecifiers(Specifiers *specifiers) {
             p++;
             break;
         }
-        p++;
     }
     if (strWidth[0]) {
         specifiers->width = strtol(strWidth, NULL, 10);
@@ -242,9 +241,8 @@ void parseSpecifiers(Specifiers *specifiers) {
     if (strPrecision[0]) {
         specifiers->precision = strtol(strPrecision, NULL, 10);
     }
-
-    checkSpecifiersParameters(specifiers, &countPrecision);
     //printf("+++%ld+++\n", countPrecision);
+    checkSpecifiersParameters(specifiers, &countPrecision);
 }
 
 //Печать флагов, ширины, точности, длины
