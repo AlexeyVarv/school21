@@ -42,7 +42,7 @@ int isTypeSymbol(Specifiers *specifiers, char c);
 
 const char* makeSpecifires(const char* buffer, Specifiers *specifiers);
 
-void itoa(int i, char *b);
+char* itoa(int i, char *str);
 
 void parseSpecifiers(Specifiers *specifiers);
 
@@ -173,6 +173,7 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     char *buffer = malloc(50 * sizeof(char));
     char* p = buffer;
     int a;
+    int zeroCount = 0;
     const char digit[] = "0123456789";
     if (specifiers->lenght.longIntFlag) {
         a = va_arg(ap, long int);
@@ -180,7 +181,6 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     } else {
         a = va_arg(ap, int);
     }
-    //memset(buffer, '0', specifiers->precision);
     if (specifiers->flags.signFlag && a >= 0) {
         *p++ = '+';
     }
@@ -190,6 +190,15 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     if (a < 0) {
         *p++ = '-';
         a *= -1;
+    }
+    int numDigit = a;
+    while(numDigit) {
+        zeroCount++;
+        numDigit = numDigit / 10;
+    }
+    while((int)specifiers->precision - zeroCount > 0) {
+        *p++ = '0';
+        zeroCount++;
     }
     int shifter = a;
     do { //Move to where representation ends
@@ -395,22 +404,18 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
     return 0;
 }
 
-void itoa(int i, char *b){
+char* itoa(int i, char *str){
     char const digit[] = "0123456789";
-    char* p = b;
-    if(i < 0){
-        *p++ = '-';
-        i *= -1;
-    }
+    char* p = str;
     int shifter = i;
     do { //Move to where representation ends
         ++p;
-        shifter = shifter/10;
+        shifter = shifter / 10;
     } while(shifter);
     *p = '\0';
     do { //Move back, inserting digits as u go
-        *--p = digit[i%10];
+        *--p = digit[i % 10];
         i = i / 10;
     } while(i);
-    //return b;
+    return str;
 }
