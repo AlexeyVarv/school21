@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #define _CRT_SECURE_NO_WARNINGS 1
+#define MAX_LEN_BUF 100
 
 typedef struct {
     int letSideFlag;
@@ -22,14 +23,15 @@ typedef struct {
 
 typedef struct {
     Flags flags;
-    int width;
-    int precision;
+    unsigned int width;
+    unsigned int precision;
     Lenght lenght;
     const char* strFlags;
     const char* strfLengthDescription;
     const char* variantsSpecifiers;
     const char* typeSymbols;
     char specifiersString[50];
+    size_t maxLenghtResultString;
 } Specifiers;
 
 
@@ -45,7 +47,7 @@ void parseSpecifiers(Specifiers *specifiers);
 
 void printSpecifiers(const Specifiers *specifiers);
 
-void resetSpecifiers(Specifiers *specifiers);
+void resetSpecifiers(Specifiers *specifiers, char* text);
 
 void checkSpecifiersParameters(Specifiers *specifiers, size_t *count);
 
@@ -53,17 +55,23 @@ char* converseIntType(Specifiers *specifiers, va_list ap);
 
 char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType);
 
+char* converseStringType(Specifiers *specifiers, va_list ap);
+
+char* converseCharType(Specifiers *specifiers, va_list ap);
 
 int main (void) {
     int a = -666;
     int b = 15508;
-    char text[500];
+    char company[] = "Umbrella Corp.";
+    char status = 'Z';
+
+    char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %+++d Age: %d!", a, b);  
+    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %-c!", a, b, company, status);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %+d Age: %d!", a, b);
+    charNumber = sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %-c!", a, b, company, status);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -78,7 +86,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
 
     va_start(ap, format);
     while(*format) {
-        resetSpecifiers(&specifiers);
+        resetSpecifiers(&specifiers, buffer);
         if (*format == '%') {
             char *bufferFromVariable;
             format++;
@@ -91,7 +99,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
             buffer+= strlen(bufferFromVariable);
             format++;
-            free(bufferFromVariable);
+            //free(bufferFromVariable);
         } else {
             *buffer++ = *format++;
         }
@@ -111,8 +119,12 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
         result = converseIntType(specifiers, ap);
         printf("***Number: %s\n", result);
         break;
-    case 'i':
-        result = converseIntType(specifiers, ap);
+    case 's':
+        result = converseStringType(specifiers, ap);
+        printf("***Number: %s\n", result);
+        break;
+    case 'c':
+        result = converseCharType(specifiers, ap);
         printf("***Number: %s\n", result);
         break;
     default:
@@ -121,12 +133,29 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
     return result;
 }
 
+char* converseCharType(Specifiers *specifiers, va_list ap) {
+    char ch = va_arg(ap, int);
+    char *buffer = malloc((specifiers->width + 2) * sizeof(char));
+    memset(buffer, ch, 1);
+    
+    return buffer;
+}
+
+
+char* converseStringType(Specifiers *specifiers, va_list ap) {
+    char *str = va_arg(ap, char*);
+    char *buffer = malloc((sizeof(str) + 1) * sizeof(char));
+    memcpy(buffer, str, strlen(str) + 1);
+    
+    return buffer;
+}
+
 //Переводит в строку тип int по заданным спецификаторам
 char* converseIntType(Specifiers *specifiers, va_list ap) {
     char *buffer = malloc(50 * sizeof(char));
+    char* p = buffer;
     int a;
     const char digit[] = "0123456789";
-    char* p = buffer;
     if (specifiers->lenght.longIntFlag) {
         a = va_arg(ap, long int);
         a = (long int)a;
@@ -163,13 +192,17 @@ void checkSpecifiersParameters(Specifiers *specifiers, size_t *count) {
     while (*p)
     {
         if (!strchr(specifiers->variantsSpecifiers, *p)) {
-            perror("Unvalid specifiers");
+            perror("Error: Unvalid specifiers");
             exit(1);
         }
         p++;
     }
     if (*count != strlen(specifiers->specifiersString)) {
-        perror("Error specifiers order");
+        perror("Error: Specifiers order");
+        exit(1);
+    }
+    if (specifiers->width > (unsigned int)specifiers->maxLenghtResultString) {
+        perror("Error: WITHG bigger then buffer");
         exit(1);
     }
 }
@@ -270,7 +303,7 @@ void printSpecifiers(const Specifiers *specifiers) {
 }
 
 //Сброс структуры спецификатора в ноль, установка параметров
-void resetSpecifiers(Specifiers *specifiers) {
+void resetSpecifiers(Specifiers *specifiers, char* text) {
     specifiers->flags.letSideFlag = 0;
     specifiers->flags.signFlag = 0;
     specifiers->flags.spaseFlag = 0;
@@ -286,6 +319,7 @@ void resetSpecifiers(Specifiers *specifiers) {
     specifiers->variantsSpecifiers = ". -+#0123456789hlL";
     specifiers->typeSymbols = "cdieEfgGosuxXpn%";
     specifiers->specifiersString[0] = '\0';
+    specifiers->maxLenghtResultString = strlen(text);
 }
 
 //Запись спецификаторов в строку, останавливается на определителе типа
