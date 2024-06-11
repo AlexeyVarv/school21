@@ -64,17 +64,18 @@ char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes
 
 int main (void) {
     int a = -666;
-    int b = 15508;
+    int b = 35;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
-
+    float salary = 5000.99f;
+    
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %d Employer: %-20s Status: %10c!", a, b, company, status);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10d Age: %+.5d Employer: %.5s Status: %10c!", a, b, company, status);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %d Age: %d Employer: %-20s Status: %10c!", a, b, company, status);
+    charNumber = sprintf(text, "MAX Name: %-10d Age: %+.5d Employer: %.5s Status: %10c Reward: %f!", a, b, company, status, salary);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -121,6 +122,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     {
     case 'd':
         result = converseIntType(specifiers, ap);
+        typeOption = MYINT;
         printf("***Number: %s\n", result);
         break;
     case 's':
@@ -156,7 +158,12 @@ char* converseCharType(Specifiers *specifiers, va_list ap) {
 char* converseStringType(Specifiers *specifiers, va_list ap) {
     char *str = va_arg(ap, char*);
     char *buffer = malloc(sizeof(str) * sizeof(char));
-    memcpy(buffer, str, strlen(str) + 1);
+    if (specifiers->precision) {
+        memcpy(buffer, str, specifiers->precision);
+    } else {
+        memcpy(buffer, str, strlen(str) + 1);
+    }
+    //memcpy(buffer, str, strlen(str) + 1);
     
     return buffer;
 }
@@ -173,6 +180,7 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     } else {
         a = va_arg(ap, int);
     }
+    //memset(buffer, '0', specifiers->precision);
     if (specifiers->flags.signFlag && a >= 0) {
         *p++ = '+';
     }
@@ -185,8 +193,8 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     }
     int shifter = a;
     do { //Move to where representation ends
-        ++p;
         shifter = shifter / 10;
+        p++;
     } while(shifter);
     *p = '\0';
     do { //Move back, inserting digits as u go
@@ -210,6 +218,9 @@ char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes
     }
     switch (typeOption)
     {
+    case MYINT:
+        memcpy(p, str, strlen(str));
+        break;    
     case MYCHAR:
         memcpy(p, str, strlen(str));
         break;
