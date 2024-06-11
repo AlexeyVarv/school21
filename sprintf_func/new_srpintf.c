@@ -31,9 +31,10 @@ typedef struct {
     const char* variantsSpecifiers;
     const char* typeSymbols;
     char specifiersString[50];
-    size_t maxLenghtResultString;
+    unsigned int maxLenghtResultString;
 } Specifiers;
 
+typedef enum {MYINT, MYFLOAT, MYCHAR, MYSTRING,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -47,17 +48,19 @@ void parseSpecifiers(Specifiers *specifiers);
 
 void printSpecifiers(const Specifiers *specifiers);
 
-void resetSpecifiers(Specifiers *specifiers, char* text);
+void resetSpecifiers(Specifiers *specifiers);
 
 void checkSpecifiersParameters(Specifiers *specifiers, size_t *count);
 
 char* converseIntType(Specifiers *specifiers, va_list ap);
 
-char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType);
+char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySprintfTipes typeOption);
 
 char* converseStringType(Specifiers *specifiers, va_list ap);
 
 char* converseCharType(Specifiers *specifiers, va_list ap);
+
+void* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
 int main (void) {
     int a = -666;
@@ -67,11 +70,11 @@ int main (void) {
 
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %-c!", a, b, company, status);  
+    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %10c!", a, b, company, status);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %-c!", a, b, company, status);
+    charNumber = sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %10c!", a, b, company, status);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -82,11 +85,12 @@ int main (void) {
 int s21_sprintf(char *buffer, const char *format, ...) {
     char* start = buffer;
     Specifiers specifiers;
+    mySprintfTipes typeOption;
     va_list ap;
-
+    
     va_start(ap, format);
     while(*format) {
-        resetSpecifiers(&specifiers, buffer);
+        resetSpecifiers(&specifiers);
         if (*format == '%') {
             char *bufferFromVariable;
             format++;
@@ -95,7 +99,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             
             printSpecifiers(&specifiers);
                         
-            bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format);
+            bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format, typeOption);
             memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
             buffer+= strlen(bufferFromVariable);
             format++;
@@ -111,7 +115,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
 }
 
 //Проверят тип переменной, возвращает строку из переменной заданного типа
-char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
+char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySprintfTipes typeOption) {
     char* result;
     switch (cType)
     {
@@ -125,11 +129,14 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType) {
         break;
     case 'c':
         result = converseCharType(specifiers, ap);
+        typeOption = MYCHAR;
         printf("***Number: %s\n", result);
         break;
     default:
         break;
     }
+    converseByWigthSpecifier(specifiers, result, typeOption);
+    
     return result;
 }
 
@@ -186,6 +193,23 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     return buffer;
 }
 
+void* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
+    if (strlen(str) > specifiers->width) {
+        ;
+    } else {
+        str = realloc(str, specifiers->width + 1);
+    }
+    switch (typeOption)
+    {
+    case MYCHAR:
+        strncat(str, "^^^", 4);
+        break;
+    
+    default:
+        break;
+    }
+}
+
 //Проверка спецификатора на невалидный символ и неверное расположение параметров
 void checkSpecifiersParameters(Specifiers *specifiers, size_t *count) {
     const char *p = specifiers->specifiersString;
@@ -201,7 +225,7 @@ void checkSpecifiersParameters(Specifiers *specifiers, size_t *count) {
         perror("Error: Specifiers order");
         exit(1);
     }
-    if (specifiers->width > (unsigned int)specifiers->maxLenghtResultString) {
+    if (specifiers->width > specifiers->maxLenghtResultString) {
         perror("Error: WITHG bigger then buffer");
         exit(1);
     }
@@ -293,17 +317,18 @@ void printSpecifiers(const Specifiers *specifiers) {
     printf("SpaseFlag: %d\n", specifiers->flags.spaseFlag);
     printf("ZeroFlag: %d\n", specifiers->flags.zeroFlag);
     printf("SharpFlag: %d\n", specifiers->flags.sharpFlag);
-    printf("Width: %d\n", specifiers->width);
-    printf("Precision: %d\n", specifiers->precision);
+    printf("Width: %u\n", specifiers->width);
+    printf("Precision: %u\n", specifiers->precision);
     printf("Length:\n");
     printf("ShortFlag: %d\n", specifiers->lenght.shortFlag);
     printf("LongIntFlag: %d\n", specifiers->lenght.longIntFlag);
     printf("LongDoubleFlag: %d\n", specifiers->lenght.longDoubleFlag);
+    printf("Buffer lenght: %u\n", specifiers->maxLenghtResultString);
     printf("***Spesifire: %s\n", specifiers->specifiersString);
 }
 
 //Сброс структуры спецификатора в ноль, установка параметров
-void resetSpecifiers(Specifiers *specifiers, char* text) {
+void resetSpecifiers(Specifiers *specifiers) {
     specifiers->flags.letSideFlag = 0;
     specifiers->flags.signFlag = 0;
     specifiers->flags.spaseFlag = 0;
@@ -319,7 +344,7 @@ void resetSpecifiers(Specifiers *specifiers, char* text) {
     specifiers->variantsSpecifiers = ". -+#0123456789hlL";
     specifiers->typeSymbols = "cdieEfgGosuxXpn%";
     specifiers->specifiersString[0] = '\0';
-    specifiers->maxLenghtResultString = strlen(text);
+    specifiers->maxLenghtResultString = MAX_LEN_BUF;
 }
 
 //Запись спецификаторов в строку, останавливается на определителе типа
@@ -349,19 +374,19 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
 void itoa(int i, char *b){
     char const digit[] = "0123456789";
     char* p = b;
-    if(i<0){
+    if(i < 0){
         *p++ = '-';
         i *= -1;
     }
     int shifter = i;
-    do{ //Move to where representation ends
+    do { //Move to where representation ends
         ++p;
         shifter = shifter/10;
-    }while(shifter);
+    } while(shifter);
     *p = '\0';
-    do{ //Move back, inserting digits as u go
+    do { //Move back, inserting digits as u go
         *--p = digit[i%10];
-        i = i/10;
-    }while(i);
+        i = i / 10;
+    } while(i);
     //return b;
 }
