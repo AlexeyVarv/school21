@@ -60,7 +60,7 @@ char* converseStringType(Specifiers *specifiers, va_list ap);
 
 char* converseCharType(Specifiers *specifiers, va_list ap);
 
-void* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
+char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
 int main (void) {
     int a = -666;
@@ -70,11 +70,11 @@ int main (void) {
 
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %10c!", a, b, company, status);  
+    int charNumber = s21_sprintf(text, "MAX Name: %d Age: %d Employer: %-20s Status: %10c!", a, b, company, status);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %d Age: %d Employer: %s Status: %10c!", a, b, company, status);
+    charNumber = sprintf(text, "MAX Name: %d Age: %d Employer: %-20s Status: %10c!", a, b, company, status);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -97,7 +97,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             format = makeSpecifires(format, &specifiers);
             parseSpecifiers(&specifiers);
             
-            printSpecifiers(&specifiers);
+            //printSpecifiers(&specifiers);
                         
             bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format, typeOption);
             memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
@@ -125,6 +125,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         break;
     case 's':
         result = converseStringType(specifiers, ap);
+        typeOption = MYSTRING;
         printf("***Number: %s\n", result);
         break;
     case 'c':
@@ -135,14 +136,17 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     default:
         break;
     }
-    converseByWigthSpecifier(specifiers, result, typeOption);
+    if (strlen(result) < specifiers->width) {
+        result = converseByWigthSpecifier(specifiers, result, typeOption);
+    }
+    //result = converseByWigthSpecifier(specifiers, result, typeOption);
     
     return result;
 }
 
 char* converseCharType(Specifiers *specifiers, va_list ap) {
     char ch = va_arg(ap, int);
-    char *buffer = malloc((specifiers->width + 2) * sizeof(char));
+    char *buffer = malloc(2 * sizeof(char));
     memset(buffer, ch, 1);
     
     return buffer;
@@ -151,7 +155,7 @@ char* converseCharType(Specifiers *specifiers, va_list ap) {
 
 char* converseStringType(Specifiers *specifiers, va_list ap) {
     char *str = va_arg(ap, char*);
-    char *buffer = malloc((sizeof(str) + 1) * sizeof(char));
+    char *buffer = malloc(sizeof(str) * sizeof(char));
     memcpy(buffer, str, strlen(str) + 1);
     
     return buffer;
@@ -193,21 +197,30 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     return buffer;
 }
 
-void* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
-    if (strlen(str) > specifiers->width) {
-        ;
-    } else {
-        str = realloc(str, specifiers->width + 1);
+char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
+    size_t spaceCount = specifiers->width;
+    char *spaceString = malloc((spaceCount + 1) * sizeof(char));
+    memset(spaceString, ' ', spaceCount);
+    char *p = spaceString;
+    /*if (strlen(str) >= spaceCount) {
+        return str;
+    }*/
+    if (!specifiers->flags.letSideFlag) {
+        p += (spaceCount - strlen(str));
     }
     switch (typeOption)
     {
     case MYCHAR:
-        strncat(str, "^^^", 4);
+        memcpy(p, str, strlen(str));
         break;
-    
+    case MYSTRING:
+        memcpy(p, str, strlen(str));
+        break;
     default:
         break;
     }
+
+    return spaceString;
 }
 
 //Проверка спецификатора на невалидный символ и неверное расположение параметров
