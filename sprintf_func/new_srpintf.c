@@ -3,8 +3,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <math.h>
 
-#define MAX_LEN_BUF 100
+#define MAX_LEN_BUF 1000
 #define convertTypeByLength(specifiers, ap, a, type) \
     do { \
         if (specifiers->lenght.longIntFlag) { \
@@ -51,7 +52,7 @@ int isTypeSymbol(Specifiers *specifiers, char c);
 
 const char* makeSpecifires(const char* buffer, Specifiers *specifiers);
 
-char* itoa(int i, char *str);
+char* intToString(int i, char *str);
 
 void parseSpecifiers(Specifiers *specifiers);
 
@@ -71,6 +72,12 @@ char* converseCharType(Specifiers *specifiers, va_list ap);
 
 char* converseUnsignedIntType(Specifiers *specifiers, va_list ap);
 
+char* converseFloatType(Specifiers *specifiers, va_list ap);
+
+int getIntegerPartLength(float num);
+
+char* floatToString(float num, char* str, Specifiers *specifiers);
+
 char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
 int main (void) {
@@ -79,14 +86,15 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 5000;
+    float coefficient = 1596.39369;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3lu!", a, b, company, status, salary);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u Priority: %.3f!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u!", a, b, company, status, salary);
+    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u Priority: %.3f!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -150,8 +158,13 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         result = converseUnsignedIntType(specifiers, ap);
         typeOption = MYINT;
         printf("***Number: %s\n", result);
-        break;    
-    default:
+        break;
+    case 'f':
+        result = converseFloatType(specifiers, ap);
+        typeOption = MYFLOAT;
+        printf("***Number: %s\n", result);
+        break;  
+        default:
         break;
     }
     if (strlen(result) < specifiers->width) {
@@ -221,7 +234,7 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
         *p++ = '0';
         zeroCount++;
     }
-    itoa(a, p);
+    intToString(a, p);
 
     return buffer;
 }
@@ -247,7 +260,33 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
         *p++ = '0';
         zeroCount++;
     }
-    itoa(a, p);
+    intToString(a, p);
+
+    return buffer;
+}
+
+char* converseFloatType(Specifiers *specifiers, va_list ap) {
+    char *buffer = malloc(50 * sizeof(char));
+    char* p = buffer;
+    float num;
+    if (specifiers->lenght.longDoubleFlag) {
+        num = va_arg(ap, long double);
+        num = (long double)num;
+    } else {
+        num = va_arg(ap, double);
+    }
+    /*if (specifiers->flags.signFlag && num >= 0) {
+        *p++ = '+';
+    }
+    if (!specifiers->flags.signFlag && num >= 0 && specifiers->flags.spaseFlag) {
+        *p++ = ' ';
+    }
+    if (num < 0) {
+        *p++ = '-';
+        num *= -1;
+    }*/
+    
+    floatToString(num, p, specifiers);
 
     return buffer;
 }
@@ -273,6 +312,9 @@ char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes
     case MYSTRING:
         memcpy(p, str, strlen(str));
         break;
+    case MYFLOAT:
+        memcpy(p, str, strlen(str));
+        break;    
     default:
         break;
     }
@@ -442,7 +484,7 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
 }
 
 //Переводит int в строку
-char* itoa(int i, char *str){
+char* intToString(int i, char *str){
     char const digit[] = "0123456789";
     char* p = str;
     int shifter = i;
@@ -455,5 +497,47 @@ char* itoa(int i, char *str){
         *--p = digit[i % 10];
         i = i / 10;
     } while(i);
+    return str;
+}
+
+int getIntegerPartLength(float num) {
+    int length = 0;
+    int integerPart = (int)num;
+    while (integerPart != 0) {
+        integerPart /= 10;
+        length++;
+    }
+    return length;
+}
+
+// Функция для перевода числа типа float в строку
+char* floatToString(float num, char* str, Specifiers* specifiers) {
+    int integerPart = (int)num;
+    float decimalPart = num - integerPart;
+    int precision = 6;
+    if (specifiers->precision) {
+        precision = specifiers->precision;
+    }
+    // Перевод целой части числа в строку
+    int integerLength = getIntegerPartLength(num);
+    for (int i = integerLength - 1; i >= 0; i--) {
+        str[i] = '0' + integerPart % 10;
+        integerPart /= 10;
+    }
+
+    // Добавление точки
+    str[integerLength] = '.';
+
+    // Перевод дробной части числа в строку
+    //int decimalLength = 6; // Предполагаем два знака после запятой
+    int decimalInteger = decimalPart * pow(10, precision); // Умножаем на 100, чтобы получить целое число
+    for (int i = integerLength + precision; i > integerLength; i--) {
+        str[i] = '0' + decimalInteger % 10;
+        decimalInteger /= 10;
+    }
+
+    // Добавление завершающего нуля
+    str[integerLength + 1 + precision] = '\0';
+
     return str;
 }
