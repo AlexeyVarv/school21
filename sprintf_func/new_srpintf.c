@@ -44,7 +44,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYFLOAT, MYCHAR, MYSTRING,} mySprintfTipes;
+typedef enum {MYINT, MYFLOAT, MYCHAR, MYSTRING, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -80,6 +80,9 @@ char* floatToString(double num, char* str, Specifiers *specifiers);
 
 char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
+char* percentToString();
+
+
 int main (void) {
     int a = -666;
     int b = 35;
@@ -90,11 +93,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-15.9f!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-.3f%%!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-15.9f!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-.3f%%!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -137,6 +140,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
 //Проверят тип переменной, возвращает строку из переменной заданного типа
 char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySprintfTipes typeOption) {
     char* result;
+    
     switch (cType)
     {
     case 'd':
@@ -163,21 +167,25 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         result = converseFloatType(specifiers, ap);
         typeOption = MYFLOAT;
         printf("***Number: %s\n", result);
-        break;  
-        default:
+        break;
+    case '%':
+        result = percentToString();
+        typeOption = PERSENT;
+        break;
+    default:
         break;
     }
     if (strlen(result) < specifiers->width) {
         result = converseByWigthSpecifier(specifiers, result, typeOption);
     }
-    //result = converseByWigthSpecifier(specifiers, result, typeOption);
-    
+        
     return result;
 }
 
 //Переводит в строку тип char по заданным спецификаторам
 char* converseCharType(Specifiers *specifiers, va_list ap) {
     char ch;
+    
     if (specifiers->lenght.longIntFlag) {
         ch = va_arg(ap, int);
         ch = (wchar_t)ch;
@@ -194,6 +202,7 @@ char* converseCharType(Specifiers *specifiers, va_list ap) {
 char* converseStringType(Specifiers *specifiers, va_list ap) {
     char *str = va_arg(ap, char*);
     char *buffer = malloc(sizeof(str) * sizeof(char));
+    
     if (specifiers->precision) {
         memcpy(buffer, str, specifiers->precision);
     } else {
@@ -246,10 +255,12 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
     return buffer;
 }
 
+//Переводит в строку с плавающей точко по спецификатору f включая точность
 char* converseFloatType(Specifiers *specifiers, va_list ap) {
     char *buffer = malloc(50 * sizeof(char));
     char* p = buffer;
     double num;
+    
     if (specifiers->lenght.longDoubleFlag) {
         num = va_arg(ap, long double);
         //printf("Size = %zd\n", sizeof(num));
@@ -465,12 +476,13 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
     return 0;
 }
 
-//Переводит int в строку
+//Переводит int в строку с заданной точностью
 char* intToString(int a, char *str, Specifiers *specifiers){
     char const digit[] = "0123456789";
     char* p = str;
     int numDigit = a;
     int zeroCount = 0;
+    
     while(numDigit) {
         zeroCount++;
         numDigit = numDigit / 10;
@@ -489,9 +501,11 @@ char* intToString(int a, char *str, Specifiers *specifiers){
         *--p = digit[a % 10];
         a = a / 10;
     } while(a);
+    
     return str;
 }
 
+//Расчет целого в числе с плавающей точкой
 int getIntegerPartLength(double num) {
     int length = 0;
     int integerPart = (int)num;
@@ -499,6 +513,7 @@ int getIntegerPartLength(double num) {
         integerPart /= 10;
         length++;
     }
+    
     return length;
 }
 
@@ -525,7 +540,6 @@ char* floatToString(double num, char* str, Specifiers* specifiers) {
     } else {
         decimalInteger /= 10;
     }
-
     for (int i = integerLength + precision; i > integerLength; i--) {
         str[i] = '0' + decimalInteger % 10;
         decimalInteger /= 10;
@@ -533,4 +547,11 @@ char* floatToString(double num, char* str, Specifiers* specifiers) {
     str[integerLength + 1 + precision] = '\0';
 
     return str;
+}
+
+//Возвращает знак %
+char* percentToString() {
+    char *strPersent = "%";
+    
+    return strPersent; 
 }
