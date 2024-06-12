@@ -74,7 +74,7 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap);
 
 char* converseFloatType(Specifiers *specifiers, va_list ap);
 
-int getIntegerPartLength(float num);
+int getIntegerPartLength(double num);
 
 char* floatToString(double num, char* str, Specifiers *specifiers);
 
@@ -86,15 +86,15 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 5000;
-    float coefficient = 1596.393692465;
+    double coefficient = 1596.393692465;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-15.6f!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-15.9f!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-15.6f!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+d Employer: %.5s Status: %10c Reward: %.3u Priority: %-15.9f!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -492,7 +492,7 @@ char* intToString(int a, char *str, Specifiers *specifiers){
     return str;
 }
 
-int getIntegerPartLength(float num) {
+int getIntegerPartLength(double num) {
     int length = 0;
     int integerPart = (int)num;
     while (integerPart != 0) {
@@ -505,7 +505,7 @@ int getIntegerPartLength(float num) {
 // Функция для перевода числа типа float в строку
 char* floatToString(double num, char* str, Specifiers* specifiers) {
     int integerPart = (int)num;
-    float decimalPart = num - integerPart;
+    double decimalPart = num - integerPart;
     int precision = 6;
     if (specifiers->precision) {
         precision = specifiers->precision;
