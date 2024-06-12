@@ -90,11 +90,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u Priority: %.3f!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u Priority: %+.3f!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u Priority: %.3f!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u Priority: %+.3f!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -275,7 +275,7 @@ char* converseFloatType(Specifiers *specifiers, va_list ap) {
     } else {
         num = va_arg(ap, double);
     }
-    /*if (specifiers->flags.signFlag && num >= 0) {
+    if (specifiers->flags.signFlag && num >= 0) {
         *p++ = '+';
     }
     if (!specifiers->flags.signFlag && num >= 0 && specifiers->flags.spaseFlag) {
@@ -284,7 +284,7 @@ char* converseFloatType(Specifiers *specifiers, va_list ap) {
     if (num < 0) {
         *p++ = '-';
         num *= -1;
-    }*/
+    }
     
     floatToString(num, p, specifiers);
 
