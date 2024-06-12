@@ -7,6 +7,17 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #define MAX_LEN_BUF 100
 
+/*#define convertTypeByLength(specifiers, ap, a, type) \
+    do { \
+        if (specifiers->lenght.longIntFlag) { \
+            *(type*)(a) = (type)va_arg(ap, long int); \
+        } else if (specifiers->lenght.shortFlag) { \
+            *(type*)(a) = (type)(short int)va_arg(ap, int); \
+        } else { \
+            *(type*)(a) = (type)va_arg(ap, int); \
+        } \
+    } while(0)*/
+
 typedef struct {
     int letSideFlag;
     int signFlag;
@@ -60,6 +71,8 @@ char* converseStringType(Specifiers *specifiers, va_list ap);
 
 char* converseCharType(Specifiers *specifiers, va_list ap);
 
+char* converseUnsignedIntType(Specifiers *specifiers, va_list ap);
+
 char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
 int main (void) {
@@ -67,15 +80,15 @@ int main (void) {
     int b = 35;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
-    float salary = 5000.99f;
+    unsigned int salary = 5000;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %-10d Age: %+.5d Employer: %.5s Status: %10c!", a, b, company, status);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u!", a, b, company, status, salary);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Name: %-10d Age: %+.5d Employer: %.5s Status: %10c Reward: %f!", a, b, company, status, salary);
+    charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u!", a, b, company, status, salary);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
 
@@ -135,6 +148,11 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         typeOption = MYCHAR;
         printf("***Number: %s\n", result);
         break;
+    case 'u':
+        result = converseUnsignedIntType(specifiers, ap);
+        typeOption = MYINT;
+        printf("***Number: %s\n", result);
+        break;    
     default:
         break;
     }
@@ -174,7 +192,6 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     char* p = buffer;
     int a;
     int zeroCount = 0;
-    const char digit[] = "0123456789";
     if (specifiers->lenght.longIntFlag) {
         a = va_arg(ap, long int);
         a = (long int)a;
@@ -200,17 +217,34 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
         *p++ = '0';
         zeroCount++;
     }
-    int shifter = a;
-    do { //Move to where representation ends
-        shifter = shifter / 10;
-        p++;
-    } while(shifter);
-    *p = '\0';
-    do { //Move back, inserting digits as u go
-        *--p = digit[a % 10];
-        a = a / 10;
-    } while(a);
-    
+    itoa(a, p);
+
+    return buffer;
+}
+
+char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
+    char *buffer = malloc(50 * sizeof(char));
+    char* p = buffer;
+    unsigned int a;
+    int zeroCount = 0;
+    a = va_arg(ap, int);
+    //convertTypeByLength(&specifiers, ap, &a, unsigned int);
+
+    if (a < 0) {
+        perror("Error: The variable must not be negative");
+        exit(1);
+    }
+    int numDigit = a;
+    while(numDigit) {
+        zeroCount++;
+        numDigit = numDigit / 10;
+    }
+    while((int)specifiers->precision - zeroCount > 0) {
+        *p++ = '0';
+        zeroCount++;
+    }
+    itoa(a, p);
+
     return buffer;
 }
 
