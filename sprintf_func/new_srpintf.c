@@ -4,10 +4,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#define _CRT_SECURE_NO_WARNINGS 1
 #define MAX_LEN_BUF 100
-
-/*#define convertTypeByLength(specifiers, ap, a, type) \
+#define convertTypeByLength(specifiers, ap, a, type) \
     do { \
         if (specifiers->lenght.longIntFlag) { \
             *(type*)(a) = (type)va_arg(ap, long int); \
@@ -16,7 +14,7 @@
         } else { \
             *(type*)(a) = (type)va_arg(ap, int); \
         } \
-    } while(0)*/
+    } while(0)
 
 typedef struct {
     int letSideFlag;
@@ -84,14 +82,14 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u!", a, b, company, status, salary);  
+    int charNumber = s21_sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3lu!", a, b, company, status, salary);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
     charNumber = sprintf(text, "MAX Name: %-10.7d Age: %+.5d Employer: %.5s Status: %10c Reward: %.3u!", a, b, company, status, salary);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
-
+    
     return 0;
 }
 
@@ -164,15 +162,22 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     return result;
 }
 
+//Переводит в строку тип char по заданным спецификаторам
 char* converseCharType(Specifiers *specifiers, va_list ap) {
-    char ch = va_arg(ap, int);
+    char ch;
+    if (specifiers->lenght.longIntFlag) {
+        ch = va_arg(ap, int);
+        ch = (wchar_t)ch;
+    } else {
+        ch = va_arg(ap, int);
+    }
     char *buffer = malloc(2 * sizeof(char));
     memset(buffer, ch, 1);
     
     return buffer;
 }
 
-
+//Возвращает указатель на строку по заданным спецификаторам включая точность
 char* converseStringType(Specifiers *specifiers, va_list ap) {
     char *str = va_arg(ap, char*);
     char *buffer = malloc(sizeof(str) * sizeof(char));
@@ -181,12 +186,11 @@ char* converseStringType(Specifiers *specifiers, va_list ap) {
     } else {
         memcpy(buffer, str, strlen(str) + 1);
     }
-    //memcpy(buffer, str, strlen(str) + 1);
-    
+        
     return buffer;
 }
 
-//Переводит в строку тип int по заданным спецификаторам
+//Переводит в строку тип int по заданным спецификаторам включая точность
 char* converseIntType(Specifiers *specifiers, va_list ap) {
     char *buffer = malloc(50 * sizeof(char));
     char* p = buffer;
@@ -222,13 +226,13 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     return buffer;
 }
 
+//Переводит в строку тип unsigned int по заданным спецификаторам включая точность
 char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
     char *buffer = malloc(50 * sizeof(char));
     char* p = buffer;
     unsigned int a;
     int zeroCount = 0;
-    a = va_arg(ap, int);
-    //convertTypeByLength(&specifiers, ap, &a, unsigned int);
+    convertTypeByLength(specifiers, ap, &a, unsigned int);
 
     if (a < 0) {
         perror("Error: The variable must not be negative");
@@ -248,14 +252,13 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
     return buffer;
 }
 
+//Выводит строку в зависимости от заданной ширины
 char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
     size_t spaceCount = specifiers->width;
     char *spaceString = malloc((spaceCount + 1) * sizeof(char));
     memset(spaceString, ' ', spaceCount);
     char *p = spaceString;
-    /*if (strlen(str) >= spaceCount) {
-        return str;
-    }*/
+    
     if (!specifiers->flags.letSideFlag) {
         p += (spaceCount - strlen(str));
     }
@@ -438,6 +441,7 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
     return 0;
 }
 
+//Переводит int в строку
 char* itoa(int i, char *str){
     char const digit[] = "0123456789";
     char* p = str;
