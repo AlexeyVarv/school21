@@ -91,7 +91,7 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 5000;
-    double coefficient = 1596.393692465;
+    double coefficient = 0.0023936924;
     
     char text[MAX_LEN_BUF];
     
@@ -562,16 +562,16 @@ char* doubleToFloatString(double num, char* str, Specifiers* specifiers) {
 
 int getExpLength(double num) {
     int length = 0;
-    if (num > 0) {
-        int integerPart = (int)num;
-        while (integerPart != 0) {
-        integerPart /= 10;
-        length++;
-    }
+    if (num > 1) {
+    
+        while (num > 1) {
+            num /= 10;
+            length++;
+        }
     } else {
-        while (num < 0) {
-        num *= 10;
-        length++;
+        while (num <= 1) {
+            num *= 10;
+            length--;
         }
     }
     
@@ -585,12 +585,13 @@ char* doubleToExpString(double num, char* str, Specifiers* specifiers) {
     }
     
     int expLength = getExpLength(num);
-    num = num * pow(10, -(expLength - 1));
+    printf("$$$%d\n", expLength);
+    num = num * pow(10, -expLength);
     int integerPart = (int)num;
     double decimalPart = num - integerPart;
     
     str[0] = '0' + integerPart % 10;
-        integerPart /= 10;
+    integerPart /= 10;
     
     str[1] = '.';
     
@@ -605,7 +606,13 @@ char* doubleToExpString(double num, char* str, Specifiers* specifiers) {
         str[i] = '0' + decimalInteger % 10;
         decimalInteger /= 10;
     }
-    str[precision + 2] = '\0';
+    str[precision + 2] = 'e';
+    if (expLength > 0) {
+        str[precision + 3] = '+';
+    } else {
+        str[precision + 3] = '-';
+    }
+    str[precision + 4] = '\0';
 
     return str;
 }
