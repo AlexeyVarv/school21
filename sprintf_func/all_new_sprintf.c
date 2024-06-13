@@ -52,8 +52,6 @@ int isTypeSymbol(Specifiers *specifiers, char c);
 
 const char* makeSpecifires(const char* buffer, Specifiers *specifiers);
 
-char* intToString(int a, char *str, Specifiers *specifiers);
-
 void parseSpecifiers(Specifiers *specifiers);
 
 void printSpecifiers(const Specifiers *specifiers);
@@ -76,6 +74,8 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
 
 int getIntegerPartLength(double num);
 
+char* intToString(int a, char *str, int precision);
+
 char* doubleToFloatString(double num, char* str, Specifiers *specifiers);
 
 char* doubleToExpString(double num, char* str, Specifiers* specifiers);
@@ -86,20 +86,20 @@ char* percentToString();
 
 
 int main (void) {
-    int a = -666;
-    int b = 35;
+    int a = 666;
+    int b = -15;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 5000;
-    double coefficient = 0.0023936924;
+    double coefficient = 0.00356984;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %d Age: %d Employer: %.5s Status: %c Reward: %u Priority: %e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %+4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %d Age: %d Employer: %.5s Status: %c Reward: %u Priority: %e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %+4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -240,7 +240,7 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
         *p++ = '-';
         a *= -1;
     }
-    intToString(a, p, specifiers);
+    intToString(a, p, specifiers->precision);
 
     return buffer;
 }
@@ -256,7 +256,7 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
         perror("Error: The variable must not be negative");
         exit(1);
     }
-    intToString(a, p, specifiers);
+    intToString(a, p, specifiers->precision);
 
     return buffer;
 }
@@ -488,17 +488,17 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
 }
 
 //Переводит int в строку с заданной точностью
-char* intToString(int a, char *str, Specifiers *specifiers){
+char* intToString(int a, char *str, int precision){
     char const digit[] = "0123456789";
     char* p = str;
     int numDigit = a;
     int zeroCount = 0;
     
-    while(numDigit) {
+    do {
         zeroCount++;
         numDigit = numDigit / 10;
-    }
-    while((int)specifiers->precision - zeroCount > 0) {
+    } while(numDigit);
+    while(precision - zeroCount > 0) {
         *p++ = '0';
         zeroCount++;
     }
@@ -563,7 +563,7 @@ char* doubleToFloatString(double num, char* str, Specifiers* specifiers) {
 int getExpLength(double num) {
     int length = 0;
     if (num > 1) {
-    
+        num /= 10;
         while (num > 1) {
             num /= 10;
             length++;
@@ -585,7 +585,6 @@ char* doubleToExpString(double num, char* str, Specifiers* specifiers) {
     }
     
     int expLength = getExpLength(num);
-    printf("$$$%d\n", expLength);
     num = num * pow(10, -expLength);
     int integerPart = (int)num;
     double decimalPart = num - integerPart;
@@ -607,12 +606,15 @@ char* doubleToExpString(double num, char* str, Specifiers* specifiers) {
         decimalInteger /= 10;
     }
     str[precision + 2] = 'e';
-    if (expLength > 0) {
+    if (expLength >= 0) {
         str[precision + 3] = '+';
     } else {
         str[precision + 3] = '-';
+        expLength *= -1;
     }
     str[precision + 4] = '\0';
+    char exp[5];
+    strncat(str, intToString(expLength, exp, 2), strlen(exp));
 
     return str;
 }
