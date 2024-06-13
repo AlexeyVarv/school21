@@ -72,7 +72,7 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap);
 
 char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeOption);
 
-int getIntegerPartLength(double num);
+int getIntegerPartLength(int num);
 
 char* intToString(int a, char *str, int precision);
 
@@ -91,15 +91,15 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 5000;
-    double coefficient = 0.00356984;
+    double coefficient = -0.0000356984;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %+4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %+4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -517,9 +517,8 @@ char* intToString(int a, char *str, int precision){
 }
 
 //Расчет целого в числе с плавающей точкой
-int getIntegerPartLength(double num) {
+int getIntegerPartLength(int integerPart) {
     int length = 0;
-    int integerPart = (int)num;
     while (integerPart != 0) {
         integerPart /= 10;
         length++;
@@ -537,7 +536,7 @@ char* doubleToFloatString(double num, char* str, Specifiers* specifiers) {
         precision = specifiers->precision;
     }
     
-    int integerLength = getIntegerPartLength(num);
+    int integerLength = getIntegerPartLength(integerPart);
     for (int i = integerLength - 1; i >= 0; i--) {
         str[i] = '0' + integerPart % 10;
         integerPart /= 10;
