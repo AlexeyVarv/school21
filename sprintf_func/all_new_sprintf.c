@@ -74,7 +74,7 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
 
 int getIntegerPartLength(int num);
 
-char* intToString(int a, char *str, int precision);
+char* intToString(int num, char *str, int precision);
 
 char* doubleToFloatString(double num, char* str, Specifiers *specifiers);
 
@@ -87,11 +87,11 @@ char* percentToString();
 
 int main (void) {
     int a = 666;
-    int b = -15;
+    int b = 0;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
-    unsigned int salary = 5000;
-    double coefficient = -0.0000356984;
+    unsigned int salary = 50;
+    double coefficient = -3.56984;
     
     char text[MAX_LEN_BUF];
     
@@ -488,31 +488,21 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
 }
 
 //Переводит int в строку с заданной точностью
-char* intToString(int a, char *str, int precision){
-    char const digit[] = "0123456789";
-    char* p = str;
-    int numDigit = a;
-    int zeroCount = 0;
-    
-    do {
-        zeroCount++;
-        numDigit = numDigit / 10;
-    } while(numDigit);
-    while(precision - zeroCount > 0) {
-        *p++ = '0';
-        zeroCount++;
+char* intToString(int num, char *str, int precision){
+    int integerLength = getIntegerPartLength(num);
+    if (precision > integerLength) {
+        for (int i = precision - 1; i >= 0; i--) {
+            str[i] = '0' + num % 10;
+            num /= 10;
+        }
+        str[precision] = '\0';
+    } else {
+        for (int i = integerLength - 1; i >= 0; i--) {
+            str[i] = '0' + num % 10;
+            num /= 10;
+        }
+        str[integerLength] = '\0';
     }
-    int shifter = a;
-    do { //Move to where representation ends
-        ++p;
-        shifter = shifter / 10;
-    } while(shifter);
-    *p = '\0';
-    do { //Move back, inserting digits as u go
-        *--p = digit[a % 10];
-        a = a / 10;
-    } while(a);
-    
     return str;
 }
 
