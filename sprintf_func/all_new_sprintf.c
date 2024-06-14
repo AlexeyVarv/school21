@@ -78,6 +78,8 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
 
 int getIntegerPartLength(int num);
 
+int getDoublePartLength(double integerPart);
+
 double roundToNDecimalPlaces(double num, int n);
 
 char* intToString(int num, char *str, int precision);
@@ -97,15 +99,15 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 1.78562e38;
+    double coefficient = 1.78151343468416146816867164845562e10;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.4e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.22e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.4e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.22e!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -554,6 +556,16 @@ int getIntegerPartLength(int integerPart) {
     return length;
 }
 
+int getDoublePartLength(double integerPart) {
+    int length = 0;
+    while (integerPart > 1) {
+        integerPart /= 10;
+        length++;
+    }
+    
+    return length;
+}
+
 double roundToNDecimalPlaces(double num, int n) {
     double multiplier = pow(10.0, n);
     return round(num * multiplier) / multiplier;
@@ -562,27 +574,26 @@ double roundToNDecimalPlaces(double num, int n) {
 // Функция для перевода дробного числа в строку с плавающей точкой
 char* doubleToFloatString(double num, char* str, int precision) {
     num = roundToNDecimalPlaces(num, precision);
-    int integerPart = (int)num;
-    double decimalPart = num - integerPart;
-       
-    int integerLength = getIntegerPartLength(integerPart);
+    double intPart;
+    double fracPart = modf(num, &intPart);
+    int integerLength = getDoublePartLength(num);
     if (!integerLength) {
         integerLength = 1;
     }
     for (int i = integerLength - 1; i >= 0; i--) {
-        str[i] = '0' + integerPart % 10;
-        integerPart /= 10;
+        str[i] = '0' + fmod(intPart, 10);
+        intPart /= 10;
     }
-    
     if (precision) {
         str[integerLength] = '.';
     
-        long int decimalInteger = decimalPart * pow(10, precision);
-    
-        for (int i = integerLength + precision; i > integerLength; i--) {
-            str[i] = '0' + decimalInteger % 10;
-            decimalInteger /= 10;
+        for (int i = integerLength + 1; i < integerLength + precision + 1; i++) {
+            fracPart *= 10;
+            int digit = (int)fracPart;
+            str[i] = '0' + digit;
+            fracPart -= digit;
         }
+
         str[integerLength + 1 + precision] = '\0';
     } else {
         str[integerLength + precision] = '\0';
@@ -615,18 +626,18 @@ char* doubleToExpString(double num, char* str, int precision) {
     int expLength = getExpLength(num);
     num = num * pow(10, -expLength);
     num = roundToNDecimalPlaces(num, precision);
-    int integerPart = (int)num;
-    double decimalPart = num - integerPart;
-        
-    str[0] = '0' + integerPart % 10;
+    double intPart;
+    double fracPart = modf(num, &intPart);   
+            
+    str[0] = '0' + fmod(intPart, 10);
         
     if (precision) {
         str[1] = '.';
-        long int decimalInteger = decimalPart * pow(10, precision);
-    
-        for (int i = precision + 1; i > 1; i--) {
-            str[i] = '0' + decimalInteger % 10;
-            decimalInteger /= 10;
+        for (int i = 2; i < precision + 2; i++) {
+            fracPart *= 10;
+            int digit = (int)fracPart;
+            str[i] = '0' + digit;
+            fracPart -= digit;
         }
         str[precision + 2] = '\0';
     } else {
