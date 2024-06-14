@@ -24,6 +24,7 @@ typedef struct {
     int zeroFlag;
     int sharpFlag;
     int negativeNumber;
+    int precisionFlag;
 } Flags;
 
 typedef struct {
@@ -77,9 +78,9 @@ int getIntegerPartLength(int num);
 
 char* intToString(int num, char *str, int precision);
 
-char* doubleToFloatString(double num, char* str, Specifiers *specifiers);
+char* doubleToFloatString(double num, char* str, int precision);
 
-char* doubleToExpString(double num, char* str, Specifiers* specifiers);
+char* doubleToExpString(double num, char* str, int precision);
 
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
@@ -87,8 +88,8 @@ char* percentToString();
 
 
 int main (void) {
-    int a = -666;
-    int b = 0;
+    int a = 0;
+    int b = 1;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 50;
@@ -96,11 +97,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %13.3d Age: %5.2d Employer: %-.5s Status: %7c Reward: %+4u Priority: %-15.5e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %04u Priority: %-15.f!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %13.3d Age: %5.2d Employer: %-.5s Status: %7c Reward: %+4u Priority: %-15.5e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %04u Priority: %-15.f!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -211,7 +212,7 @@ char* converseStringType(Specifiers *specifiers, va_list ap) {
     char *str = va_arg(ap, char*);
     char *buffer = malloc(sizeof(str) * sizeof(char));
     
-    if (specifiers->precision) {
+    if (specifiers->flags.precisionFlag) {
         memcpy(buffer, str, specifiers->precision);
     } else {
         memcpy(buffer, str, strlen(str) + 1);
@@ -262,7 +263,7 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
     char *buffer = malloc(50 * sizeof(char));
     char* p = buffer;
     double num;
-    
+        
     if (specifiers->lenght.longDoubleFlag) {
         num = va_arg(ap, long double);
         num = (long double)num;
@@ -273,11 +274,16 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
         specifiers->flags.negativeNumber = 1;
         num *= -1;
     }
+
+    int currentPrecicion = 6;
+    if (specifiers->flags.precisionFlag) {
+        currentPrecicion = specifiers->precision;
+    }
     
     if (typeOption == MYFLOAT) {
-        doubleToFloatString(num, p, specifiers);
+        doubleToFloatString(num, p, currentPrecicion);
     } else if (typeOption == MYEXP) {
-        doubleToExpString(num, p, specifiers);
+        doubleToExpString(num, p, currentPrecicion);
     }
     
     return buffer;
@@ -292,7 +298,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     memset(zeroString, '0', spaceCount);
     
     char *p;
-     
+    
     if (specifiers->flags.letSideFlag) {
         p = spaceString;
         if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP) {
@@ -305,7 +311,6 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
             if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
                 *p++ = ' ';
             }
-            //p++;
         }
     }
        
@@ -313,26 +318,26 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT) {
             if(specifiers->flags.zeroFlag) {
                 p = zeroString;
-                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
+                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber && typeOption != MYUINT) {
                 *p = '+';
                 }
-                if (specifiers->flags.negativeNumber) {
+                if (specifiers->flags.negativeNumber && typeOption != MYUINT) {
                 *p = '-';
                 }
-                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
+                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag && typeOption != MYUINT) {
                 *p = ' ';
                 }
                 p += (spaceCount - strlen(str));
             } else {
                 p = spaceString;
                 p += (spaceCount - strlen(str) - 1);
-                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
+                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber && typeOption != MYUINT) {
                 *p = '+';
                 }
-                if (specifiers->flags.negativeNumber) {
+                if (specifiers->flags.negativeNumber && typeOption != MYUINT) {
                 *p = '-';
                 }
-                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
+                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag && typeOption != MYUINT) {
                 *p = ' ';
                 }
                 p++;
@@ -409,6 +414,7 @@ void parseSpecifiers(Specifiers *specifiers) {
         }
         strWidth[widthIndex] = '\0';
         if (*p == '.') {
+            specifiers->flags.precisionFlag = 1;
             p++;
             countPrecision++;
         }
@@ -476,8 +482,9 @@ void resetSpecifiers(Specifiers *specifiers) {
     specifiers->flags.zeroFlag = 0;
     specifiers->flags.sharpFlag = 0;
     specifiers->flags.negativeNumber = 0;
+    specifiers->flags.precisionFlag = 0;
     specifiers->width = 0;
-    specifiers->precision = 1;
+    specifiers->precision = 0;
     specifiers->lenght.shortFlag = 0;
     specifiers->lenght.longIntFlag = 0;
     specifiers->lenght.longDoubleFlag = 0;
@@ -544,14 +551,10 @@ int getIntegerPartLength(int integerPart) {
 }
 
 // Функция для перевода дробного числа в строку с плавающей точкой
-char* doubleToFloatString(double num, char* str, Specifiers* specifiers) {
+char* doubleToFloatString(double num, char* str, int precision) {
     int integerPart = (int)num;
     double decimalPart = num - integerPart;
-    int precision = 6;
-    if (specifiers->precision) {
-        precision = specifiers->precision;
-    }
-    
+       
     int integerLength = getIntegerPartLength(integerPart);
     for (int i = integerLength - 1; i >= 0; i--) {
         str[i] = '0' + integerPart % 10;
@@ -595,12 +598,7 @@ int getExpLength(double num) {
 }
 
 //Функция для перевода дробного числа в строку с экспоненциальной записью
-char* doubleToExpString(double num, char* str, Specifiers* specifiers) {
-    int precision = 6;
-    if (specifiers->precision) {
-        precision = specifiers->precision;
-    }
-    
+char* doubleToExpString(double num, char* str, int precision) {
     int expLength = getExpLength(num);
     num = num * pow(10, -expLength);
     int integerPart = (int)num;
