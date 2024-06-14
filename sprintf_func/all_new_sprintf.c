@@ -92,16 +92,16 @@ int main (void) {
     int b = 1;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
-    unsigned int salary = 50;
-    double coefficient = -3.56984;
+    unsigned int salary = 0;
+    double coefficient = 0.0;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %04u Priority: %-15.f!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.f!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %04u Priority: %-15.f!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.f!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -556,10 +556,14 @@ char* doubleToFloatString(double num, char* str, int precision) {
     double decimalPart = num - integerPart;
        
     int integerLength = getIntegerPartLength(integerPart);
+    if (!integerLength) {
+        integerLength = 1;
+    }
     for (int i = integerLength - 1; i >= 0; i--) {
         str[i] = '0' + integerPart % 10;
         integerPart /= 10;
     }
+    
     str[integerLength] = '.';
     
     long int decimalInteger = decimalPart * pow(10, precision + 1);
@@ -574,7 +578,7 @@ char* doubleToFloatString(double num, char* str, int precision) {
         decimalInteger /= 10;
     }
     str[integerLength + 1 + precision] = '\0';
-
+    
     return str;
 }
 
