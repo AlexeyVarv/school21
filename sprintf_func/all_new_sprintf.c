@@ -6,6 +6,8 @@
 #include <math.h>
 
 #define MAX_LEN_BUF 1000
+#define MAX_LEN_DOUBLE 400
+#define MAX_LEN_INT 50
 #define convertTypeByLength(specifiers, ap, a, type) \
     do { \
         if (specifiers->lenght.longIntFlag) { \
@@ -76,6 +78,8 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
 
 int getIntegerPartLength(int num);
 
+double roundToNDecimalPlaces(double num, int n);
+
 char* intToString(int num, char *str, int precision);
 
 char* doubleToFloatString(double num, char* str, int precision);
@@ -93,15 +97,15 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 0.0;
+    double coefficient = 1.78562e38;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.f!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.4e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.f!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.4e!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -223,7 +227,7 @@ char* converseStringType(Specifiers *specifiers, va_list ap) {
 
 //Переводит в строку тип int по заданным спецификаторам включая точность
 char* converseIntType(Specifiers *specifiers, va_list ap) {
-    char *buffer = malloc(50 * sizeof(char));
+    char *buffer = malloc(MAX_LEN_INT * sizeof(char));
     char* p = buffer;
     int a;
     
@@ -244,7 +248,7 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
 
 //Переводит в строку тип unsigned int по заданным спецификаторам включая точность
 char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
-    char *buffer = malloc(50 * sizeof(char));
+    char *buffer = malloc(MAX_LEN_INT * sizeof(char));
     char* p = buffer;
     unsigned int a;
     convertTypeByLength(specifiers, ap, &a, unsigned int);
@@ -260,7 +264,7 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
 
 //Переводит в строку с плавающей точко по спецификатору f включая точность
 char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeOption) {
-    char *buffer = malloc(50 * sizeof(char));
+    char *buffer = malloc(MAX_LEN_DOUBLE * sizeof(char));
     char* p = buffer;
     double num;
         
@@ -550,8 +554,14 @@ int getIntegerPartLength(int integerPart) {
     return length;
 }
 
+double roundToNDecimalPlaces(double num, int n) {
+    double multiplier = pow(10.0, n);
+    return round(num * multiplier) / multiplier;
+}
+
 // Функция для перевода дробного числа в строку с плавающей точкой
 char* doubleToFloatString(double num, char* str, int precision) {
+    num = roundToNDecimalPlaces(num, precision);
     int integerPart = (int)num;
     double decimalPart = num - integerPart;
        
@@ -564,21 +574,20 @@ char* doubleToFloatString(double num, char* str, int precision) {
         integerPart /= 10;
     }
     
-    str[integerLength] = '.';
+    if (precision) {
+        str[integerLength] = '.';
     
-    long int decimalInteger = decimalPart * pow(10, precision + 1);
-    int rest = decimalInteger % 10;
-    if (rest >= 5) {
-        decimalInteger = decimalInteger / 10 + 1;
+        long int decimalInteger = decimalPart * pow(10, precision);
+    
+        for (int i = integerLength + precision; i > integerLength; i--) {
+            str[i] = '0' + decimalInteger % 10;
+            decimalInteger /= 10;
+        }
+        str[integerLength + 1 + precision] = '\0';
     } else {
-        decimalInteger /= 10;
+        str[integerLength + precision] = '\0';
     }
-    for (int i = integerLength + precision; i > integerLength; i--) {
-        str[i] = '0' + decimalInteger % 10;
-        decimalInteger /= 10;
-    }
-    str[integerLength + 1 + precision] = '\0';
-    
+         
     return str;
 }
 
@@ -605,35 +614,36 @@ int getExpLength(double num) {
 char* doubleToExpString(double num, char* str, int precision) {
     int expLength = getExpLength(num);
     num = num * pow(10, -expLength);
+    num = roundToNDecimalPlaces(num, precision);
     int integerPart = (int)num;
     double decimalPart = num - integerPart;
-    
+        
     str[0] = '0' + integerPart % 10;
-    integerPart /= 10;
+        
+    if (precision) {
+        str[1] = '.';
+        long int decimalInteger = decimalPart * pow(10, precision);
     
-    str[1] = '.';
-    
-    long int decimalInteger = decimalPart * pow(10, precision + 1);
-    int rest = decimalInteger % 10;
-    if (rest >= 5) {
-        decimalInteger = decimalInteger / 10 + 1;
+        for (int i = precision + 1; i > 1; i--) {
+            str[i] = '0' + decimalInteger % 10;
+            decimalInteger /= 10;
+        }
+        str[precision + 2] = '\0';
     } else {
-        decimalInteger /= 10;
+        str[1] = '\0';
     }
-    for (int i = precision + 1; i > 1; i--) {
-        str[i] = '0' + decimalInteger % 10;
-        decimalInteger /= 10;
-    }
-    str[precision + 2] = 'e';
+        
+    char exp[10];
+    char *p = exp;
+    *p++ = 'e';
     if (expLength >= 0) {
-        str[precision + 3] = '+';
+        *p++ = '+';
     } else {
-        str[precision + 3] = '-';
+        *p++ = '-';
         expLength *= -1;
     }
-    str[precision + 4] = '\0';
-    char exp[5];
-    strncat(str, intToString(expLength, exp, 2), strlen(exp));
+    intToString(expLength, p, 2);
+    strncat(str, exp, strlen(exp));
 
     return str;
 }
