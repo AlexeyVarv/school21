@@ -23,6 +23,7 @@ typedef struct {
     int spaseFlag;
     int zeroFlag;
     int sharpFlag;
+    int negativeNumber;
 } Flags;
 
 typedef struct {
@@ -44,7 +45,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, PERSENT,} mySprintfTipes;
+typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -80,13 +81,13 @@ char* doubleToFloatString(double num, char* str, Specifiers *specifiers);
 
 char* doubleToExpString(double num, char* str, Specifiers* specifiers);
 
-char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
+char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
 char* percentToString();
 
 
 int main (void) {
-    int a = 666;
+    int a = -666;
     int b = 0;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
@@ -95,11 +96,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %13.3d Age: %5.2d Employer: %-.5s Status: %7c Reward: %+4u Priority: %-15.5e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %+13.7d Age: %.5d Employer: %.5s Status: %-7c Reward: %4u Priority: %+15.5e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %13.3d Age: %5.2d Employer: %-.5s Status: %7c Reward: %+4u Priority: %-15.5e!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -161,7 +162,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         printf("***Number: %s\n", result);
         break;
     case 'u':
-        typeOption = MYINT;        
+        typeOption = MYUINT;        
         result = converseUnsignedIntType(specifiers, ap);
         printf("***Number: %s\n", result);
         break;
@@ -173,6 +174,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'e':
         typeOption = MYEXP;    
         result = converseFloatType(specifiers, ap, typeOption);
+        printf("***Number: %s\n", result);
         break;    
     case '%':
         typeOption = PERSENT;        
@@ -182,7 +184,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         break;
     }
     if (strlen(result) < specifiers->width) {
-        result = converseByWigthSpecifier(specifiers, result, typeOption);
+        result = converseByFlagsWigthSpecifier(specifiers, result, typeOption);
     }
         
     return result;
@@ -230,14 +232,8 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
     } else {
         a = va_arg(ap, int);
     }
-    if (specifiers->flags.signFlag && a >= 0) {
-        *p++ = '+';
-    }
-    if (!specifiers->flags.signFlag && a >= 0 && specifiers->flags.spaseFlag) {
-        *p++ = ' ';
-    }
     if (a < 0) {
-        *p++ = '-';
+        specifiers->flags.negativeNumber = 1;
         a *= -1;
     }
     intToString(a, p, specifiers->precision);
@@ -269,19 +265,12 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
     
     if (specifiers->lenght.longDoubleFlag) {
         num = va_arg(ap, long double);
-        //printf("Size = %zd\n", sizeof(num));
         num = (long double)num;
     } else {
         num = va_arg(ap, double);
     }
-    if (specifiers->flags.signFlag && num >= 0) {
-        *p++ = '+';
-    }
-    if (!specifiers->flags.signFlag && num >= 0 && specifiers->flags.spaseFlag) {
-        *p++ = ' ';
-    }
     if (num < 0) {
-        *p++ = '-';
+        specifiers->flags.negativeNumber = 1;
         num *= -1;
     }
     
@@ -295,34 +284,69 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
 }
 
 //Выводит строку в зависимости от заданной ширины
-char* converseByWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
+char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
     size_t spaceCount = specifiers->width;
     char *spaceString = malloc((spaceCount + 1) * sizeof(char));
     memset(spaceString, ' ', spaceCount);
-    char *p = spaceString;
+    char *zeroString = malloc((spaceCount + 1) * sizeof(char));
+    memset(zeroString, '0', spaceCount);
     
+    char *p;
+     
+    if (specifiers->flags.letSideFlag) {
+        p = spaceString;
+        if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP) {
+            if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
+                *p++ = '+';
+            }
+            if (specifiers->flags.negativeNumber) {
+                *p++ = '-';
+            }
+            if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
+                *p++ = ' ';
+            }
+            //p++;
+        }
+    }
+       
     if (!specifiers->flags.letSideFlag) {
-        p += (spaceCount - strlen(str));
+        if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT) {
+            if(specifiers->flags.zeroFlag) {
+                p = zeroString;
+                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
+                *p = '+';
+                }
+                if (specifiers->flags.negativeNumber) {
+                *p = '-';
+                }
+                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
+                *p = ' ';
+                }
+                p += (spaceCount - strlen(str));
+            } else {
+                p = spaceString;
+                p += (spaceCount - strlen(str) - 1);
+                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
+                *p = '+';
+                }
+                if (specifiers->flags.negativeNumber) {
+                *p = '-';
+                }
+                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
+                *p = ' ';
+                }
+                p++;
+            }    
+        } else {
+            p = spaceString;
+            p += (spaceCount - strlen(str));
+        }    
     }
-    switch (typeOption)
-    {
-    case MYINT:
-        memcpy(p, str, strlen(str));
-        break;    
-    case MYCHAR:
-        memcpy(p, str, strlen(str));
-        break;
-    case MYSTRING:
-        memcpy(p, str, strlen(str));
-        break;
-    case MYFLOAT:
-    case MYEXP:
-        memcpy(p, str, strlen(str));
-        break;    
-    default:
-        break;
+    memcpy(p, str, strlen(str));
+      
+    if (specifiers->flags.zeroFlag) {
+        return zeroString;
     }
-
     return spaceString;
 }
 
@@ -433,6 +457,7 @@ void printSpecifiers(const Specifiers *specifiers) {
     printf("SpaseFlag: %d\n", specifiers->flags.spaseFlag);
     printf("ZeroFlag: %d\n", specifiers->flags.zeroFlag);
     printf("SharpFlag: %d\n", specifiers->flags.sharpFlag);
+    printf("negativeNumber: %d\n", specifiers->flags.negativeNumber);
     printf("Width: %u\n", specifiers->width);
     printf("Precision: %u\n", specifiers->precision);
     printf("Length:\n");
@@ -450,8 +475,9 @@ void resetSpecifiers(Specifiers *specifiers) {
     specifiers->flags.spaseFlag = 0;
     specifiers->flags.zeroFlag = 0;
     specifiers->flags.sharpFlag = 0;
+    specifiers->flags.negativeNumber = 0;
     specifiers->width = 0;
-    specifiers->precision = 0;
+    specifiers->precision = 1;
     specifiers->lenght.shortFlag = 0;
     specifiers->lenght.longIntFlag = 0;
     specifiers->lenght.longDoubleFlag = 0;
@@ -517,7 +543,7 @@ int getIntegerPartLength(int integerPart) {
     return length;
 }
 
-// Функция для перевода числа типа float в строку
+// Функция для перевода дробного числа в строку с плавающей точкой
 char* doubleToFloatString(double num, char* str, Specifiers* specifiers) {
     int integerPart = (int)num;
     double decimalPart = num - integerPart;
@@ -549,6 +575,7 @@ char* doubleToFloatString(double num, char* str, Specifiers* specifiers) {
     return str;
 }
 
+//Возвращает число цифр целого
 int getExpLength(double num) {
     int length = 0;
     if (num > 1) {
@@ -567,6 +594,7 @@ int getExpLength(double num) {
     return length;
 }
 
+//Функция для перевода дробного числа в строку с экспоненциальной записью
 char* doubleToExpString(double num, char* str, Specifiers* specifiers) {
     int precision = 6;
     if (specifiers->precision) {
