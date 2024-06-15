@@ -95,19 +95,19 @@ char* percentToString();
 
 int main (void) {
     int a = 0;
-    int b = 1;
+    int b = -1;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 1.78151343468416146816867164845562e10;
+    float coefficient = -0.75452635;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.22e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %-12.6f!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %.22e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %-12.6f!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -130,7 +130,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             format = makeSpecifires(format, &specifiers);
             parseSpecifiers(&specifiers);
             
-            //printSpecifiers(&specifiers);
+            printSpecifiers(&specifiers);
                         
             bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format, typeOption);
             memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
@@ -558,42 +558,38 @@ int getIntegerPartLength(int integerPart) {
 
 int getDoublePartLength(double integerPart) {
     int length = 0;
-    while (integerPart > 1) {
+    do {
         integerPart /= 10;
         length++;
-    }
+    } while (integerPart > 1);
     
     return length;
 }
 
 double roundToNDecimalPlaces(double num, int n) {
     double multiplier = pow(10.0, n);
-    return round(num * multiplier) / multiplier;
+    return round(num * (multiplier )) / multiplier;
 }
 
 // Функция для перевода дробного числа в строку с плавающей точкой
 char* doubleToFloatString(double num, char* str, int precision) {
     num = roundToNDecimalPlaces(num, precision);
     double intPart;
-    double fracPart = modf(num, &intPart);
+    double fracPart = modf(num, &intPart); //Стандартная функция, разделяет число с плавающей точкой на 2 числа double - целую и дробную часть
     int integerLength = getDoublePartLength(num);
-    if (!integerLength) {
-        integerLength = 1;
-    }
+    
     for (int i = integerLength - 1; i >= 0; i--) {
-        str[i] = '0' + fmod(intPart, 10);
+        str[i] = '0' + fmod(intPart, 10); //Стандартная функция - вычисляет остаток от деления для чисел с плавающей точкой
         intPart /= 10;
     }
     if (precision) {
         str[integerLength] = '.';
-    
         for (int i = integerLength + 1; i < integerLength + precision + 1; i++) {
             fracPart *= 10;
             int digit = (int)fracPart;
             str[i] = '0' + digit;
             fracPart -= digit;
         }
-
         str[integerLength + 1 + precision] = '\0';
     } else {
         str[integerLength + precision] = '\0';
@@ -628,7 +624,6 @@ char* doubleToExpString(double num, char* str, int precision) {
     num = roundToNDecimalPlaces(num, precision);
     double intPart;
     double fracPart = modf(num, &intPart);   
-            
     str[0] = '0' + fmod(intPart, 10);
         
     if (precision) {
