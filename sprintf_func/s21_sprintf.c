@@ -71,11 +71,11 @@ char* converseStringType(Specifiers *specifiers, va_list ap);
 
 char* converseCharType(Specifiers *specifiers, va_list ap);
 
-char* converseUnsignedIntType(Specifiers *specifiers, va_list ap);
+char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes typeOption);
 
 char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeOption);
 
-int getIntegerPartLength(int num);
+int getIntegerPartLength(unsigned long long integerPart);
 
 int getDoublePartLength(double integerPart);
 
@@ -83,11 +83,15 @@ double roundToNDecimalPlaces(double num, int n);
 
 char* intToString(int num, char *str, int precision);
 
+char* hexToString(unsigned long long num, char *str, int precision);
+
 char* doubleToFloatString(double num, char* str, int precision);
 
 char* doubleToExpString(double num, char* str, int precision);
 
 int getExpLength(double num);
+
+int getHexPartLength(unsigned long long integerPart);
 
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
@@ -96,20 +100,21 @@ char* percentToString();
 
 int main (void) {
     int a = -55;
-    int b = 0;
+    int b = 33;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 0.75452635e115;
-    int group = 1256;
+    double coefficient = 0.75452635e11;
+    unsigned int group = 125678;
+
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %08d Age: %-10d Employer: %s Status: %5c Reward: %+05u Priority: % 015.4e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %X!", a, b, company, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %08d Age: %-10d Employer: %s Status: %5c Reward: %+05u Priority: % 015.4e Group %010X!", a, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %X!", a, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -170,7 +175,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         break;
     case 'u':
         typeOption = MYUINT;        
-        result = converseUnsignedIntType(specifiers, ap);
+        result = converseUnsignedIntType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
     case 'f':
@@ -183,9 +188,9 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         result = converseFloatType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
-    case 'x':
+    case 'X':
         typeOption = MYHEX;    
-        result = converseFloatType(specifiers, ap, typeOption);
+        result = converseUnsignedIntType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;   
     case '%':
@@ -265,7 +270,7 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
 }
 
 //Переводит в строку тип unsigned int по заданным спецификаторам включая точность
-char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
+char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes typeOption) {
     char *buffer = malloc(MAX_LEN_INT * sizeof(char));
     char* p = buffer;
     unsigned int a;
@@ -278,7 +283,12 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
     if (specifiers->precision == 0 && a == 0 && specifiers->flags.precisionFlag) {
         buffer[0] = '\0';
     } else {
-        intToString(a, p, specifiers->precision);
+        if (typeOption == MYUINT) {
+            intToString(a, p, specifiers->precision);
+        }
+        else if (typeOption == MYHEX) {
+            hexToString(a, p, specifiers->precision);
+        }
     }
 
     return buffer;
@@ -524,23 +534,49 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
 char* intToString(int num, char *str, int precision){
     int integerLength = getIntegerPartLength(num);
     if (precision > integerLength) {
-        for (int i = precision - 1; i >= 0; i--) {
-            str[i] = '0' + num % 10;
-            num /= 10;
-        }
-        str[precision] = '\0';
-    } else {
-        for (int i = integerLength - 1; i >= 0; i--) {
-            str[i] = '0' + num % 10;
-            num /= 10;
-        }
-        str[integerLength] = '\0';
+        integerLength = precision;
+        
+    } 
+    for (int i = integerLength - 1; i >= 0; i--) {
+        str[i] = '0' + num % 10;
+        num /= 10;
     }
+    str[integerLength] = '\0';
+    
     return str;
 }
 
-//Расчет целого в числе с плавающей точкой
-int getIntegerPartLength(int integerPart) {
+char* hexToString(unsigned long long num, char *str, int precision) {
+    int integerLength = getHexPartLength(num);
+    if (precision > integerLength) {
+        integerLength = precision;
+    }
+    for (int i = integerLength - 1; i >= 0; i--) {
+        int digit = (num % 16);
+        if (digit < 10) {
+            str[i] = '0' + digit;
+        } else {
+            str[i] = 'A' + (digit - 10);
+        }
+        num /= 16;
+    }
+    str[integerLength] = '\0';
+    
+    return str;
+}
+
+int getHexPartLength(unsigned long long integerPart) {
+    int length = 0;
+    do {
+        integerPart /= 16;
+        length++;
+    } while (integerPart != 0);
+    
+    return length;
+}
+
+// Расчет целого в числе с плавающей точкой
+int getIntegerPartLength(unsigned long long integerPart) {
     int length = 0;
     do {
         integerPart /= 10;
