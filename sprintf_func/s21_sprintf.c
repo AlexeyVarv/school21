@@ -47,7 +47,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, PERSENT,} mySprintfTipes;
+typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYHEX, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -100,15 +100,16 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    float coefficient = 0.75452635;
+    double coefficient = 0.75452635e115;
+    int group = 1256;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %08d Age: %-10d Employer: %s Status: %5c Reward: %u Priority: % 015.4e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %08d Age: %-10d Employer: %s Status: %5c Reward: %+05u Priority: % 015.4e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %08d Age: %-10d Employer: %s Status: %5c Reward: %u Priority: % 015.4e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %08d Age: %-10d Employer: %s Status: %5c Reward: %+05u Priority: % 015.4e Group %010X!", a, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -181,7 +182,12 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         typeOption = MYEXP;    
         result = converseFloatType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
-        break;    
+        break;
+    case 'x':
+        typeOption = MYHEX;    
+        result = converseFloatType(specifiers, ap, typeOption);
+        printf("***Number: %s\n", result);
+        break;   
     case '%':
         typeOption = PERSENT;        
         result = percentToString();
@@ -323,9 +329,9 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     memset(zeroString, '0', spaceCount);
     char *p;
     
-    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP)) {
+    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT)) {
         p = zeroString;
-        if (specifiers->flags.signFlag && str[0] != '-') {
+        if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT) {
             *p = '+';
             str[0] = '0';
         }
