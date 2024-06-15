@@ -47,7 +47,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYHEX, PERSENT,} mySprintfTipes;
+typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, MYLOWHEX, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -83,7 +83,9 @@ double roundToNDecimalPlaces(double num, int n);
 
 char* intToString(int num, char *str, int precision);
 
-char* hexToString(unsigned long long num, char *str, int precision);
+char* hexUpToString(unsigned long long num, char *str, int precision);
+
+char* hexLowToString(unsigned long long num, char *str, int precision);
 
 char* doubleToFloatString(double num, char* str, int precision);
 
@@ -110,11 +112,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %X!", a, b, company, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %x!", a, b, company, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %X!", a, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %x!", a, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -189,10 +191,15 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         printf("***Number: %s\n", result);
         break;
     case 'X':
-        typeOption = MYHEX;    
+        typeOption = MYUPHEX;    
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
-        break;   
+        break;
+    case 'x':
+        typeOption = MYLOWHEX;    
+        result = converseUnsignedIntType(specifiers, ap, typeOption);
+        printf("***Number: %s\n", result);
+        break;     
     case '%':
         typeOption = PERSENT;        
         result = percentToString();
@@ -286,8 +293,11 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes
         if (typeOption == MYUINT) {
             intToString(a, p, specifiers->precision);
         }
-        else if (typeOption == MYHEX) {
-            hexToString(a, p, specifiers->precision);
+        else if (typeOption == MYUPHEX) {
+            hexUpToString(a, p, specifiers->precision);
+        }
+        else if (typeOption == MYLOWHEX) {
+            hexLowToString(a, p, specifiers->precision);
         }
     }
 
@@ -546,7 +556,7 @@ char* intToString(int num, char *str, int precision){
     return str;
 }
 
-char* hexToString(unsigned long long num, char *str, int precision) {
+char* hexUpToString(unsigned long long num, char *str, int precision) {
     int integerLength = getHexPartLength(num);
     if (precision > integerLength) {
         integerLength = precision;
@@ -557,6 +567,25 @@ char* hexToString(unsigned long long num, char *str, int precision) {
             str[i] = '0' + digit;
         } else {
             str[i] = 'A' + (digit - 10);
+        }
+        num /= 16;
+    }
+    str[integerLength] = '\0';
+    
+    return str;
+}
+
+char* hexLowToString(unsigned long long num, char *str, int precision) {
+    int integerLength = getHexPartLength(num);
+    if (precision > integerLength) {
+        integerLength = precision;
+    }
+    for (int i = integerLength - 1; i >= 0; i--) {
+        int digit = (num % 16);
+        if (digit < 10) {
+            str[i] = '0' + digit;
+        } else {
+            str[i] = 'a' + (digit - 10);
         }
         num /= 16;
     }
