@@ -94,8 +94,8 @@ char* percentToString();
 
 
 int main (void) {
-    int a = 55;
-    int b = -1;
+    int a = -55;
+    int b = 0;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
@@ -103,11 +103,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %+2d Age: %d Employer: %14s Status: %5c Reward: %.0u Priority: %+5.4e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %4.8d Age: %-.d Employer: %.s Status: %-5c Reward: %-u Priority: %+15.4f!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %+2d Age: %d Employer: %14s Status: %5c Reward: %.0u Priority: %+5.4e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %4.8d Age: %-.d Employer: %.s Status: %-5c Reward: %-u Priority: %+15.4f!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -242,8 +242,12 @@ char* converseIntType(Specifiers *specifiers, va_list ap) {
         specifiers->flags.negativeNumber = 1;
         a *= -1;
     }
-    intToString(a, p, specifiers->precision);
-
+    if (specifiers->precision == 0 && a == 0 && specifiers->flags.precisionFlag) {
+        buffer[0] = '\0';
+    } else {
+        intToString(a, p, specifiers->precision);
+    }
+    
     return buffer;
 }
 
@@ -258,7 +262,11 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap) {
         perror("Error: The variable must not be negative");
         exit(1);
     }
-    intToString(a, p, specifiers->precision);
+    if (specifiers->precision == 0 && a == 0 && specifiers->flags.precisionFlag) {
+        buffer[0] = '\0';
+    } else {
+        intToString(a, p, specifiers->precision);
+    }
 
     return buffer;
 }
@@ -545,10 +553,10 @@ char* intToString(int num, char *str, int precision){
 //Расчет целого в числе с плавающей точкой
 int getIntegerPartLength(int integerPart) {
     int length = 0;
-    while (integerPart != 0) {
+    do {
         integerPart /= 10;
         length++;
-    }
+    } while (integerPart != 0);
     
     return length;
 }
