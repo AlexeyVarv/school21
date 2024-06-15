@@ -94,7 +94,7 @@ char* percentToString();
 
 
 int main (void) {
-    int a = 0;
+    int a = 5;
     int b = -1;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
@@ -103,11 +103,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %-12.6f!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %-5.0d Age: %2d Employer: %14s Status: %5c Reward: %.0u Priority: %12.4e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %.0d Age: %.0d Employer: %-.0s Status: %5c Reward: %.0u Priority: %-12.6f!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %-5.0d Age: %2d Employer: %14s Status: %5c Reward: %.0u Priority: %12.4e!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -129,10 +129,8 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             format++;
             format = makeSpecifires(format, &specifiers);
             parseSpecifiers(&specifiers);
-            
-            printSpecifiers(&specifiers);
-                        
             bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format, typeOption);
+            //printSpecifiers(&specifiers);
             memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
             buffer+= strlen(bufferFromVariable);
             format++;
@@ -190,7 +188,12 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     default:
         break;
     }
-    if (strlen(result) < specifiers->width) {
+
+    size_t markerWidth = strlen(result);
+    if (specifiers->flags.negativeNumber) {
+        markerWidth--;
+    }
+    if (markerWidth < specifiers->width) {
         result = converseByFlagsWigthSpecifier(specifiers, result, typeOption);
     }
         
@@ -305,60 +308,54 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     
     char *p;
     
-    if (specifiers->flags.letSideFlag) {
-        p = spaceString;
-        if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP) {
-            if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
-                *p++ = '+';
-            }
-            if (specifiers->flags.negativeNumber) {
-                *p++ = '-';
-            }
-            if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
-                *p++ = ' ';
-            }
+    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP)) {
+        p = zeroString;
+        if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber && typeOption != MYUINT) {
+        *p = '+';
         }
-    }
-       
-    if (!specifiers->flags.letSideFlag) {
-        if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT) {
-            if(specifiers->flags.zeroFlag) {
-                p = zeroString;
-                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber && typeOption != MYUINT) {
-                *p = '+';
+        if (specifiers->flags.negativeNumber && typeOption != MYUINT) {
+        *p = '-';
+        }
+        if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag && typeOption != MYUINT) {
+        *p = ' ';
+        }
+        p += (spaceCount - strlen(str));
+        memcpy(p, str, strlen(str));
+        return zeroString;
+    } else {
+        p = spaceString;
+        if (specifiers->flags.letSideFlag) {
+            if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP) {
+                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
+                *p++ = '+';
                 }
-                if (specifiers->flags.negativeNumber && typeOption != MYUINT) {
-                *p = '-';
+                if (specifiers->flags.negativeNumber) {
+                *p++ = '-';
                 }
-                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag && typeOption != MYUINT) {
-                *p = ' ';
+                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
+                *p++ = ' ';
                 }
-                p += (spaceCount - strlen(str));
-            } else {
-                p = spaceString;
+            }
+        } else {
+            if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP) {
                 p += (spaceCount - strlen(str) - 1);
                 if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber && typeOption != MYUINT) {
                 *p = '+';
                 }
-                if (specifiers->flags.negativeNumber && typeOption != MYUINT) {
+                if (specifiers->flags.negativeNumber) {
                 *p = '-';
                 }
                 if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag && typeOption != MYUINT) {
                 *p = ' ';
                 }
-                p++;
-            }    
-        } else {
-            p = spaceString;
+                //p++;
+            }
             p += (spaceCount - strlen(str));
-        }    
+        }
+        memcpy(p, str, strlen(str));
+        return spaceString;
     }
-    memcpy(p, str, strlen(str));
-      
-    if (specifiers->flags.zeroFlag) {
-        return zeroString;
-    }
-    return spaceString;
+    
 }
 
 //Проверка спецификатора на невалидный символ и неверное расположение параметров
@@ -469,7 +466,8 @@ void printSpecifiers(const Specifiers *specifiers) {
     printf("SpaseFlag: %d\n", specifiers->flags.spaseFlag);
     printf("ZeroFlag: %d\n", specifiers->flags.zeroFlag);
     printf("SharpFlag: %d\n", specifiers->flags.sharpFlag);
-    printf("negativeNumber: %d\n", specifiers->flags.negativeNumber);
+    printf("NegativeNumber: %d\n", specifiers->flags.negativeNumber);
+    printf("PresicionFlag: %d\n", specifiers->flags.precisionFlag);
     printf("Width: %u\n", specifiers->width);
     printf("Precision: %u\n", specifiers->precision);
     printf("Length:\n");
