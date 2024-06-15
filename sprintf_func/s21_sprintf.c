@@ -87,6 +87,8 @@ char* doubleToFloatString(double num, char* str, int precision);
 
 char* doubleToExpString(double num, char* str, int precision);
 
+int getExpLength(double num);
+
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
 char* percentToString();
@@ -456,7 +458,6 @@ void printSpecifiers(const Specifiers *specifiers) {
     printf("SpaseFlag: %d\n", specifiers->flags.spaseFlag);
     printf("ZeroFlag: %d\n", specifiers->flags.zeroFlag);
     printf("SharpFlag: %d\n", specifiers->flags.sharpFlag);
-    printf("NegativeNumber: %d\n", specifiers->flags.negativeNumber);
     printf("PresicionFlag: %d\n", specifiers->flags.precisionFlag);
     printf("Width: %u\n", specifiers->width);
     printf("Precision: %u\n", specifiers->precision);
