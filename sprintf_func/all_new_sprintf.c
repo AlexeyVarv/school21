@@ -94,20 +94,20 @@ char* percentToString();
 
 
 int main (void) {
-    int a = 5;
+    int a = 55;
     int b = -1;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    float coefficient = -0.75452635;
+    float coefficient = 0.75452635;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %-5.0d Age: %2d Employer: %14s Status: %5c Reward: %.0u Priority: %12.4e!", a, b, company, status, salary, coefficient);  
+    int charNumber = s21_sprintf(text, "MAX Code: %+2d Age: %d Employer: %14s Status: %5c Reward: %.0u Priority: %+5.4e!", a, b, company, status, salary, coefficient);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %-5.0d Age: %2d Employer: %14s Status: %5c Reward: %.0u Priority: %12.4e!", a, b, company, status, salary, coefficient);
+    charNumber = sprintf(text, "MAX Code: %+2d Age: %d Employer: %14s Status: %5c Reward: %.0u Priority: %+5.4e!", a, b, company, status, salary, coefficient);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -189,11 +189,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         break;
     }
 
-    size_t markerWidth = strlen(result);
-    if (specifiers->flags.negativeNumber) {
-        markerWidth--;
-    }
-    if (markerWidth < specifiers->width) {
+    if (strlen(result) < specifiers->width || specifiers->flags.negativeNumber || specifiers->flags.signFlag || specifiers->flags.spaseFlag) {
         result = converseByFlagsWigthSpecifier(specifiers, result, typeOption);
     }
         
@@ -301,6 +297,9 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
 //Выводит строку в зависимости от заданной ширины
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
     size_t spaceCount = specifiers->width;
+    if (strlen(str) >= specifiers->width) {
+        spaceCount = strlen(str) + 1;
+    }
     char *spaceString = malloc((spaceCount + 1) * sizeof(char));
     memset(spaceString, ' ', spaceCount);
     char *zeroString = malloc((spaceCount + 1) * sizeof(char));
@@ -337,20 +336,20 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
                 }
             }
         } else {
+            p += (spaceCount - strlen(str));
             if (typeOption == MYINT || typeOption == MYFLOAT || typeOption == MYEXP) {
-                p += (spaceCount - strlen(str) - 1);
-                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber && typeOption != MYUINT) {
-                *p = '+';
+                if (specifiers->flags.signFlag && !specifiers->flags.negativeNumber) {
+                *--p = '+';
                 }
                 if (specifiers->flags.negativeNumber) {
-                *p = '-';
+                *--p = '-';
                 }
-                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag && typeOption != MYUINT) {
-                *p = ' ';
+                if (!specifiers->flags.signFlag && !specifiers->flags.negativeNumber && specifiers->flags.spaseFlag) {
+                *--p = ' ';
                 }
-                //p++;
+                p++;
             }
-            p += (spaceCount - strlen(str));
+            
         }
         memcpy(p, str, strlen(str));
         return spaceString;
