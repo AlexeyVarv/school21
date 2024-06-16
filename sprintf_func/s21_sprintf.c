@@ -49,7 +49,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, MYLOWHEX, PERSENT,} mySprintfTipes;
+typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -89,8 +89,6 @@ char* intToString(int num, char *str, int precision);
 
 char* hexUpToString(unsigned long long num, char *str, int precision);
 
-char* hexLowToString(unsigned long long num, char *str, int precision);
-
 char* doubleToFloatString(double num, char* str, int precision);
 
 char* doubleToExpString(double num, char* str, int precision);
@@ -102,6 +100,8 @@ int getHexPartLength(unsigned long long integerPart);
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
 char* percentToString();
+
+void *s21_to_lower(const char *str);
 
 
 int main (void) {
@@ -189,19 +189,25 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         result = converseFloatType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
-    case 'e':
+    case 'E':
         typeOption = MYEXP;    
         result = converseFloatType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
+    case 'e':
+        typeOption = MYEXP;    
+        result = converseFloatType(specifiers, ap, typeOption);
+        result = s21_to_lower(result);
+        break;    
     case 'X':
         typeOption = MYUPHEX;    
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
     case 'x':
-        typeOption = MYLOWHEX; //Исправить, использовать функцию перевода строки в нижний регистр
+        typeOption = MYUPHEX; //Исправить, использовать функцию перевода строки в нижний регистр
         result = converseUnsignedIntType(specifiers, ap, typeOption);
+        result = s21_to_lower(result);
         printf("***Number: %s\n", result);
         break;     
     case '%':
@@ -308,10 +314,7 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes
         }
         else if (typeOption == MYUPHEX) {
             hexUpToString(a, p, specifiers->precision);
-        }
-        else if (typeOption == MYLOWHEX) {
-            hexLowToString(a, p, specifiers->precision);
-        }
+        }    
     }
 
     return buffer;
@@ -600,25 +603,6 @@ char* hexUpToString(unsigned long long num, char *str, int precision) {
     return str;
 }
 
-char* hexLowToString(unsigned long long num, char *str, int precision) {
-    int integerLength = getHexPartLength(num);
-    if (precision > integerLength) {
-        integerLength = precision;
-    }
-    for (int i = integerLength - 1; i >= 0; i--) {
-        int digit = (num % 16);
-        if (digit < 10) {
-            str[i] = '0' + digit;
-        } else {
-            str[i] = 'a' + (digit - 10);
-        }
-        num /= 16;
-    }
-    str[integerLength] = '\0';
-    
-    return str;
-}
-
 int getHexPartLength(unsigned long long integerPart) {
     int length = 0;
     do {
@@ -725,7 +709,7 @@ char* doubleToExpString(double num, char* str, int precision) {
         
     char exp[10];
     char *p = exp;
-    *p++ = 'e';
+    *p++ = 'E';
     if (expLength >= 0) {
         *p++ = '+';
     } else {
@@ -743,4 +727,22 @@ char* percentToString() {
     char *strPersent = "%";
     
     return strPersent; 
+}
+
+void *s21_to_lower(const char *str) {
+  size_t length = strlen(str);
+  char *res = malloc((length + 1) * sizeof(char));
+
+  for (size_t i = 0; i < length; i++) {
+    if (str[i] >= 65 && str[i] <= 90) {
+      res[i] = str[i] + 32;
+      continue;
+    }
+
+    res[i] = str[i];
+  }
+
+  res[length] = '\0';
+
+  return &res[0];
 }
