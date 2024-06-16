@@ -26,6 +26,8 @@ typedef struct {
     int zeroFlag;
     int sharpFlag;
     int precisionFlag;
+    int widthArgumentFlag;
+    int precisionArgumentFlag;
 } Flags;
 
 typedef struct {
@@ -62,6 +64,8 @@ void printSpecifiers(const Specifiers *specifiers);
 void resetSpecifiers(Specifiers *specifiers);
 
 void checkSpecifiersParameters(Specifiers *specifiers, size_t *count);
+
+void checkWidhtPresicionArg(Specifiers *specifiers, va_list ap);
 
 char* converseIntType(Specifiers *specifiers, va_list ap);
 
@@ -101,7 +105,7 @@ char* percentToString();
 
 
 int main (void) {
-    int a = -55;
+    int a = 15;
     int b = 33;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
@@ -112,11 +116,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %x!", a, b, company, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %*c Reward: %05u Priority: % 015.4e Group %.7x!", 8, 6, a, 10, b, company, 5, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %08d Age: %-10.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %x!", a, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %.7x!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -157,7 +161,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
 //Проверят тип переменной, возвращает строку из переменной заданного типа
 char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySprintfTipes typeOption) {
     char* result;
-    
+    checkWidhtPresicionArg(specifiers, ap);
     switch (cType)
     {
     case 'd':
@@ -196,7 +200,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         printf("***Number: %s\n", result);
         break;
     case 'x':
-        typeOption = MYLOWHEX;    
+        typeOption = MYLOWHEX; //Исправить, использовать функцию перевода строки в нижний регистр
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;     
@@ -214,6 +218,15 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         
     return result;
 }
+
+void checkWidhtPresicionArg(Specifiers *specifiers, va_list ap) {
+    if (specifiers->flags.widthArgumentFlag) {
+        specifiers->width = va_arg(ap, int);
+    } 
+    if (specifiers->flags.precisionArgumentFlag) {
+        specifiers->precision = va_arg(ap, int);
+    } 
+}    
 
 //Переводит в строку тип char по заданным спецификаторам
 char* converseCharType(Specifiers *specifiers, va_list ap) {
@@ -435,6 +448,11 @@ void parseSpecifiers(Specifiers *specifiers) {
             countPrecision++;
         }
         strWidth[widthIndex] = '\0';
+        if (*p == '*') {
+            specifiers->flags.widthArgumentFlag = 1;
+            p++;
+            countPrecision++;
+        }
         if (*p == '.') {
             specifiers->flags.precisionFlag = 1;
             p++;
@@ -443,6 +461,11 @@ void parseSpecifiers(Specifiers *specifiers) {
         while(isdigit(*p)) {
             strPrecision[precisionIndex] = *p;
             precisionIndex++;
+            p++;
+            countPrecision++;
+        }
+        if (*p == '*' && *(p - 1) == '.') {
+            specifiers->flags.precisionArgumentFlag = 1;
             p++;
             countPrecision++;
         }
@@ -503,6 +526,8 @@ void resetSpecifiers(Specifiers *specifiers) {
     specifiers->flags.zeroFlag = 0;
     specifiers->flags.sharpFlag = 0;
     specifiers->flags.precisionFlag = 0;
+    specifiers->flags.widthArgumentFlag = 0;
+    specifiers->flags.precisionArgumentFlag = 0;
     specifiers->width = 0;
     specifiers->precision = 0;
     specifiers->lenght.shortFlag = 0;
@@ -510,7 +535,7 @@ void resetSpecifiers(Specifiers *specifiers) {
     specifiers->lenght.longDoubleFlag = 0;
     specifiers->strFlags = "-+ 0#";
     specifiers->strfLengthDescription = "hlL";
-    specifiers->variantsSpecifiers = ". -+#0123456789hlL";
+    specifiers->variantsSpecifiers = ". -+#*0123456789hlL";
     specifiers->typeSymbols = "cdieEfgGosuxXpn%";
     specifiers->specifiersString[0] = '\0';
     specifiers->maxLenghtResultString = MAX_LEN_BUF;
