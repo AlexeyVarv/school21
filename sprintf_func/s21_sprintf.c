@@ -110,17 +110,17 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 0.75452635e11;
+    double coefficient = 0.0001;
     unsigned int group = 125678;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %*c Reward: %05u Priority: % 015.4e Group %.7x!", 8, 6, a, 10, b, company, 5, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %*c Reward: %05u Priority: %15.6e Group %#10X!", 8, 6, a, 10, b, company, 5, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %5c Reward: %05u Priority: % 015.4e Group %.7x!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %5c Reward: %05u Priority: %15.6e Group %#10X!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -313,6 +313,10 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes
             intToString(a, p, specifiers->precision);
         }
         else if (typeOption == MYUPHEX) {
+            if (specifiers->flags.sharpFlag) {
+                *p++ = '0';
+                *p++ = 'X';
+            }
             hexUpToString(a, p, specifiers->precision);
         }    
     }
@@ -365,9 +369,9 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     memset(zeroString, '0', spaceCount);
     char *p;
     
-    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT)) {
+    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYUPHEX && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT)) {
         p = zeroString;
-        if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT) {
+        if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYUPHEX) {
             *p = '+';
             str[0] = '0';
         }
@@ -405,6 +409,10 @@ void checkSpecifiersParameters(Specifiers *specifiers, size_t *count) {
         p++;
     }
     if (*count != strlen(specifiers->specifiersString)) {
+        perror("Error: Specifiers order");
+        exit(1);
+    }
+    if (specifiers->flags.widthArgumentFlag && specifiers->width > 0) {
         perror("Error: Specifiers order");
         exit(1);
     }
@@ -669,14 +677,14 @@ char* doubleToFloatString(double num, char* str, int precision) {
 //Возвращает число цифр целого
 int getExpLength(double num) {
     int length = 0;
-    if (num > 1) {
+    if (num >= 1) {
         num /= 10;
         while (num > 1) {
             num /= 10;
             length++;
         }
     } else {
-        while (num <= 1) {
+        while (num < 1) {
             num *= 10;
             length--;
         }
