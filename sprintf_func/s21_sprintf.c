@@ -404,7 +404,6 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         memcpy(p, str, strlen(str));
         return spaceString;
     }
-    
 }
 
 //Проверка спецификатора на невалидный символ и неверное расположение параметров
