@@ -124,11 +124,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o Adress: %p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %#.7g Group %#020x Adress: %20p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o Adress: %p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %#.7g Group %#020x Adress: %20p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -390,10 +390,14 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
         int lenght = getExpLength(num);
         if (lenght >= currentPrecicion || lenght < -4) {
             doubleToExpString(num, p, currentPrecicion - 1);
-            removeExpZeros(buffer);
+            if (!specifiers->flags.sharpFlag) {
+                removeExpZeros(buffer);
+            }
         } else {
             doubleToFloatString(num, p, currentPrecicion - (lenght + 1));
-            removeTrailingZeros(buffer);
+            if (!specifiers->flags.sharpFlag) {
+                removeTrailingZeros(buffer);
+            }
         }
     }
     
@@ -459,9 +463,9 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     memset(zeroString, '0', spaceCount);
     char *p;
     
-    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYUPHEX && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
+    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
         p = zeroString;
-        if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYUPHEX && typeOption != MYOCT) {
+        if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYOCT) {
             *p = '+';
             str[0] = '0';
         }
@@ -473,6 +477,13 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
             *p = ' ';
             str[0] = '0';
         }
+        p += (spaceCount - strlen(str));
+        memcpy(p, str, strlen(str));
+        return zeroString;
+    } else if (specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && (typeOption == MYUPHEX && !specifiers->flags.precisionFlag)) {
+        p = zeroString;
+        *(p + 1) = 'x';
+        str[1] = '0';
         p += (spaceCount - strlen(str));
         memcpy(p, str, strlen(str));
         return zeroString;
