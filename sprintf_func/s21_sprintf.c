@@ -49,7 +49,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, MYOCT, PERSENT,} mySprintfTipes;
+typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, MYOCT, MYPOINTER, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -116,11 +116,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %*c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, 5, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %5c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %p Status: %c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -214,6 +214,10 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         typeOption = MYOCT;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         break;
+    case 'p':
+        typeOption = MYPOINTER;
+        result = converseUnsignedIntType(specifiers, ap, typeOption);
+        break;    
     case '%':
         typeOption = PERSENT;
         result = percentToString();
@@ -241,7 +245,6 @@ void checkWidhtPresicionArg(Specifiers *specifiers, va_list ap) {
 //Переводит в строку тип char по заданным спецификаторам
 char* converseCharType(Specifiers *specifiers, va_list ap) {
     char ch;
-    char *buffer;
     if (specifiers->lenght.longIntFlag) {
         ch = va_arg(ap, int);
         ch = (wchar_t)ch;
