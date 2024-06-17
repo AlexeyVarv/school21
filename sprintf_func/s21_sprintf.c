@@ -80,6 +80,8 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes
 
 char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeOption);
 
+char* conversePointerType(va_list ap);
+
 int getIntegerPartLength(unsigned long long integerPart, int dividor);
 
 int getDoublePartLength(long double integerPart);
@@ -117,15 +119,16 @@ int main (void) {
     unsigned int salary = 0;
     double coefficient = .00000000105000;
     unsigned int group = 127;
+    int *ptr = &a;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o Adress: %p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o Adress: %p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -230,7 +233,8 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         break;
     case 'p':
         typeOption = MYPOINTER;
-        result = converseUnsignedIntType(specifiers, ap, typeOption);
+        result = conversePointerType(ap);
+        result = s21_to_lower(result);
         break;    
     case '%':
         typeOption = PERSENT;
@@ -433,6 +437,17 @@ void removeTrailingZeros(char* str) {
     if (*currPos == '.') {
         *currPos = '\0';
     }
+}
+
+char* conversePointerType(va_list ap) {
+    char *buffer = malloc(MAX_LEN_INT * sizeof(char));
+    void * ptr = va_arg(ap, void *);
+    char* p = buffer;
+    *p++ = '0';
+    *p++ = 'X';
+    hexUpToString((unsigned long long)ptr, p, 0);
+
+    return buffer;
 }
 
 //Выводит строку в зависимости от заданной ширины
