@@ -111,17 +111,17 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 12577568.37;
+    double coefficient = 1250.2;
     unsigned int group = 127;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.5e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7G Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.5e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7G Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -376,9 +376,9 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
     } else if (typeOption == MYFLOATEXP) {
         int lenght = getExpLength(num);
         if (lenght >= currentPrecicion || lenght < -4) {
-            doubleToExpString(num, p, 5);
+            doubleToExpString(num, p, currentPrecicion - 1);
         } else {
-            doubleToFloatString(num, p, currentPrecicion);
+            doubleToFloatString(num, p, currentPrecicion - (lenght + 1));
         }
     }
     
