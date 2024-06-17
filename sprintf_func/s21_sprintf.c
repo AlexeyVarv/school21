@@ -49,7 +49,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, PERSENT,} mySprintfTipes;
+typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, MYOCT, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -79,9 +79,9 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes
 
 char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeOption);
 
-int getIntegerPartLength(unsigned long long integerPart);
+int getIntegerPartLength(unsigned long long integerPart, int dividor);
 
-int getDoublePartLength(double integerPart);
+int getDoublePartLength(long double integerPart);
 
 double roundToNDecimalPlaces(double num, int n);
 
@@ -89,13 +89,13 @@ char* intToString(int num, char *str, int precision);
 
 char* hexUpToString(unsigned long long num, char *str, int precision);
 
+char* octToString(unsigned long long num, char *str, int precision);
+
 char* doubleToFloatString(double num, char* str, int precision);
 
 char* doubleToExpString(double num, char* str, int precision);
 
 int getExpLength(double num);
-
-int getHexPartLength(unsigned long long integerPart);
 
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
@@ -111,16 +111,16 @@ int main (void) {
     char status = 'Z';
     unsigned int salary = 0;
     double coefficient = 0.0001;
-    unsigned int group = 125678;
+    unsigned int group = 127;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %*c Reward: %05u Priority: %15.6e Group %#10X!", 8, 6, a, 10, b, company, 5, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %*c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, 5, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %5c Reward: %05u Priority: %15.6e Group %#10X!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %5c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -209,7 +209,11 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         result = s21_to_lower(result);
         printf("***Number: %s\n", result);
-        break;     
+        break;
+    case 'o':
+        typeOption = MYOCT;    
+        result = converseUnsignedIntType(specifiers, ap, typeOption);
+        break;
     case '%':
         typeOption = PERSENT;        
         result = percentToString();
@@ -318,7 +322,13 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes
                 *p++ = 'X';
             }
             hexUpToString(a, p, specifiers->precision);
-        }    
+        }
+        else if (typeOption == MYOCT) {
+            if (specifiers->flags.sharpFlag) {
+                *p++ = '0';
+            }
+            octToString(a, p, specifiers->precision);
+        }   
     }
 
     return buffer;
@@ -578,7 +588,7 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
 
 //Переводит int в строку с заданной точностью
 char* intToString(int num, char *str, int precision){
-    int integerLength = getIntegerPartLength(num);
+    int integerLength = getIntegerPartLength(num, 10);
     if (precision > integerLength) {
         integerLength = precision;
         
@@ -593,7 +603,7 @@ char* intToString(int num, char *str, int precision){
 }
 
 char* hexUpToString(unsigned long long num, char *str, int precision) {
-    int integerLength = getHexPartLength(num);
+    int integerLength = getIntegerPartLength(num, 16);
     if (precision > integerLength) {
         integerLength = precision;
     }
@@ -611,28 +621,32 @@ char* hexUpToString(unsigned long long num, char *str, int precision) {
     return str;
 }
 
-int getHexPartLength(unsigned long long integerPart) {
-    int length = 0;
-    do {
-        integerPart /= 16;
-        length++;
-    } while (integerPart != 0);
+char* octToString(unsigned long long num, char *str, int precision) {
+    int integerLength = getIntegerPartLength(num, 8);
+    if (precision > integerLength) {
+        integerLength = precision;
+    }
+    for (int i = integerLength - 1; i >= 0; i--) {
+        str[i] = '0' + num % 8;
+        num /= 8;
+    }
+    str[integerLength] = '\0';
     
-    return length;
+    return str;
 }
 
 // Расчет целого в числе с плавающей точкой
-int getIntegerPartLength(unsigned long long integerPart) {
+int getIntegerPartLength(unsigned long long integerPart, int dividor) {
     int length = 0;
     do {
-        integerPart /= 10;
+        integerPart /= dividor;
         length++;
     } while (integerPart != 0);
     
     return length;
 }
 
-int getDoublePartLength(double integerPart) {
+int getDoublePartLength(long double integerPart) {
     int length = 0;
     do {
         integerPart /= 10;
@@ -677,6 +691,9 @@ char* doubleToFloatString(double num, char* str, int precision) {
 //Возвращает число цифр целого
 int getExpLength(double num) {
     int length = 0;
+    if (num == 0) {
+        return 0;
+    }
     if (num >= 1) {
         num /= 10;
         while (num > 1) {
