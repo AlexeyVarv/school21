@@ -108,7 +108,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
 
 char* percentToString();
 
-void *s21_to_lower(const char *str);
+char *myToLower(char *str);
 
 
 int main (void) {
@@ -124,11 +124,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %#.7g Group %#020x Adress: %20p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);  
+    int charNumber = s21_sprintf(text, "MAX Code: %d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %#.7g Group %#020x Adress: %20p!", 8, 6, a, 10, b, company, status, salary, coefficient, group, ptr);
+    charNumber = sprintf(text, "MAX Code: %d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -205,7 +205,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'e':
         typeOption = MYEXP;
         result = converseFloatType(specifiers, ap, typeOption);
-        result = s21_to_lower(result);
+        result = myToLower(result);
         break;
     case 'G':
         typeOption = MYFLOATEXP;
@@ -214,7 +214,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'g':
         typeOption = MYFLOATEXP;
         result = converseFloatType(specifiers, ap, typeOption);
-        result = s21_to_lower(result);
+        result = myToLower(result);
         break;     
     case 'X':
         typeOption = MYUPHEX;
@@ -224,7 +224,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'x':
         typeOption = MYUPHEX; //Исправить, использовать функцию перевода строки в нижний регистр
         result = converseUnsignedIntType(specifiers, ap, typeOption);
-        result = s21_to_lower(result);
+        result = myToLower(result);
         printf("***Number: %s\n", result);
         break;
     case 'o':
@@ -234,7 +234,7 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'p':
         typeOption = MYPOINTER;
         result = conversePointerType(ap);
-        result = s21_to_lower(result);
+        result = myToLower(result);
         break;    
     case '%':
         typeOption = PERSENT;
@@ -844,20 +844,14 @@ char* percentToString() {
     return strPersent; 
 }
 
-void *s21_to_lower(const char *str) {
+char* myToLower(char *str) {
   size_t length = strlen(str);
-  char *res = malloc((length + 1) * sizeof(char));
-
   for (size_t i = 0; i < length; i++) {
     if (str[i] >= 65 && str[i] <= 90) {
-      res[i] = str[i] + 32;
+      str[i] = str[i] + 32;
       continue;
     }
-
-    res[i] = str[i];
   }
 
-  res[length] = '\0';
-
-  return &res[0];
+  return str;
 }
