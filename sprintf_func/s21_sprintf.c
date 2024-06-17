@@ -180,27 +180,27 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         printf("***Number: %s\n", result);
         break;
     case 'u':
-        typeOption = MYUINT;        
+        typeOption = MYUINT;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
     case 'f':
-        typeOption = MYFLOAT;    
+        typeOption = MYFLOAT;
         result = converseFloatType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
     case 'E':
-        typeOption = MYEXP;    
+        typeOption = MYEXP;
         result = converseFloatType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
     case 'e':
-        typeOption = MYEXP;    
+        typeOption = MYEXP;
         result = converseFloatType(specifiers, ap, typeOption);
         result = s21_to_lower(result);
-        break;    
+        break;   
     case 'X':
-        typeOption = MYUPHEX;    
+        typeOption = MYUPHEX;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         printf("***Number: %s\n", result);
         break;
@@ -211,11 +211,11 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         printf("***Number: %s\n", result);
         break;
     case 'o':
-        typeOption = MYOCT;    
+        typeOption = MYOCT;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         break;
     case '%':
-        typeOption = PERSENT;        
+        typeOption = PERSENT;
         result = percentToString();
         break;
     default:
@@ -241,7 +241,7 @@ void checkWidhtPresicionArg(Specifiers *specifiers, va_list ap) {
 //Переводит в строку тип char по заданным спецификаторам
 char* converseCharType(Specifiers *specifiers, va_list ap) {
     char ch;
-    
+    char *buffer;
     if (specifiers->lenght.longIntFlag) {
         ch = va_arg(ap, int);
         ch = (wchar_t)ch;
@@ -249,7 +249,7 @@ char* converseCharType(Specifiers *specifiers, va_list ap) {
         ch = va_arg(ap, int);
     }
     char *buffer = malloc(2 * sizeof(char));
-    memset(buffer, ch, 1);
+    buffer[0] = ch;
     
     return buffer;
 }
@@ -379,9 +379,9 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     memset(zeroString, '0', spaceCount);
     char *p;
     
-    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYUPHEX && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT)) {
+    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYUPHEX && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT)) {
         p = zeroString;
-        if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYUPHEX) {
+        if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYUPHEX && typeOption != MYOCT) {
             *p = '+';
             str[0] = '0';
         }
