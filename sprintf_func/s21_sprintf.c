@@ -96,6 +96,10 @@ char* doubleToFloatString(double num, char* str, int precision);
 
 char* doubleToExpString(double num, char* str, int precision);
 
+void removeExpZeros(char* str);
+
+void removeTrailingZeros(char* str);
+
 int getExpLength(double num);
 
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
@@ -111,17 +115,17 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 1250.2;
+    double coefficient = .00000000105000;
     unsigned int group = 127;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7G Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7G Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.7g Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -203,7 +207,12 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'G':
         typeOption = MYFLOATEXP;
         result = converseFloatType(specifiers, ap, typeOption);
-        break;  
+        break;
+    case 'g':
+        typeOption = MYFLOATEXP;
+        result = converseFloatType(specifiers, ap, typeOption);
+        result = s21_to_lower(result);
+        break;     
     case 'X':
         typeOption = MYUPHEX;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
@@ -377,12 +386,53 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
         int lenght = getExpLength(num);
         if (lenght >= currentPrecicion || lenght < -4) {
             doubleToExpString(num, p, currentPrecicion - 1);
+            removeExpZeros(buffer);
         } else {
             doubleToFloatString(num, p, currentPrecicion - (lenght + 1));
+            removeTrailingZeros(buffer);
         }
     }
     
     return buffer;
+}
+
+void removeExpZeros(char* str) {
+    char* ePos = strchr(str, 'E'); // Находим символ 'E'
+
+    if (ePos == NULL) {
+        return; // 'E' не найден, выходим
+    }
+    char* currPos = ePos - 1; // Указатель на символ перед 'E'
+
+    // Проходим от 'E' к началу строки
+    while (currPos && *currPos == '0') {
+        // Если текущий символ - ноль, удаляем его
+        memmove(currPos, currPos + 1, strlen(currPos));
+        currPos--;
+    }
+}
+
+void removeTrailingZeros(char* str) {
+    int len = strlen(str);
+    char* dotPos = strchr(str, '.'); // Находим символ '.'
+
+    if (dotPos == NULL) {
+        return; // '.' не найден, выходим
+    }
+
+    char* currPos = str + len - 1; // Указатель на последний символ
+
+    // Проходим от конца строки к началу
+    while (currPos > dotPos && *currPos == '0') {
+        // Если текущий символ - ноль, удаляем его
+        *currPos = '\0';
+        currPos--;
+    }
+
+    // Если последний символ оказался точкой, удаляем её тоже
+    if (*currPos == '.') {
+        *currPos = '\0';
+    }
 }
 
 //Выводит строку в зависимости от заданной ширины
@@ -394,7 +444,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     memset(zeroString, '0', spaceCount);
     char *p;
     
-    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYUPHEX && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYEXP || typeOption == MYUINT)) {
+    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYUPHEX && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
         p = zeroString;
         if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYUPHEX && typeOption != MYOCT) {
             *p = '+';
