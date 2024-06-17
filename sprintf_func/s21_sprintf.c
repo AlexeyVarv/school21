@@ -21,7 +21,7 @@
     } while(0)
 
 typedef struct {
-    int letSideFlag;
+    int leftSideFlag;
     int signFlag;
     int spaseFlag;
     int zeroFlag;
@@ -155,14 +155,14 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
             buffer+= strlen(bufferFromVariable);
             format++;
-            //free(bufferFromVariable);
+            free(bufferFromVariable);
         } else {
             *buffer++ = *format++;
         }
     }
     va_end(ap);
     *buffer = '\0';
-
+    
     return buffer - start;
 }
 
@@ -463,7 +463,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     memset(zeroString, '0', spaceCount);
     char *p;
     
-    if(specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
+    if(specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
         p = zeroString;
         if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYOCT) {
             *p = '+';
@@ -480,7 +480,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         p += (spaceCount - strlen(str));
         memcpy(p, str, strlen(str));
         return zeroString;
-    } else if (specifiers->flags.zeroFlag && !specifiers->flags.letSideFlag && (typeOption == MYUPHEX && !specifiers->flags.precisionFlag)) {
+    } else if (specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && (typeOption == MYUPHEX && !specifiers->flags.precisionFlag)) {
         p = zeroString;
         *(p + 1) = 'x';
         str[1] = '0';
@@ -489,7 +489,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         return zeroString;
     } else {
         p = spaceString;
-        if (!specifiers->flags.letSideFlag) {
+        if (!specifiers->flags.leftSideFlag) {
             p += (spaceCount - strlen(str));
         }
         memcpy(p, str, strlen(str));
@@ -534,7 +534,7 @@ void parseSpecifiers(Specifiers *specifiers) {
         while (strchr(specifiers->strFlags, *p) && *p != '\0') {
             switch(*p) {
             case '-': 
-                specifiers->flags.letSideFlag = 1;
+                specifiers->flags.leftSideFlag = 1;
                 break;
             case '+':
                 specifiers->flags.signFlag = 1;
@@ -613,7 +613,7 @@ void parseSpecifiers(Specifiers *specifiers) {
 //Печать флагов, ширины, точности, длины
 void printSpecifiers(const Specifiers *specifiers) {
     printf("Flags:\n");
-    printf("LetSideFlag: %d\n", specifiers->flags.letSideFlag);
+    printf("leftSideFlag: %d\n", specifiers->flags.leftSideFlag);
     printf("SignFlag: %d\n", specifiers->flags.signFlag);
     printf("SpaseFlag: %d\n", specifiers->flags.spaseFlag);
     printf("ZeroFlag: %d\n", specifiers->flags.zeroFlag);
@@ -631,7 +631,7 @@ void printSpecifiers(const Specifiers *specifiers) {
 
 //Сброс структуры спецификатора в ноль, установка параметров
 void resetSpecifiers(Specifiers *specifiers) {
-    specifiers->flags.letSideFlag = 0;
+    specifiers->flags.leftSideFlag = 0;
     specifiers->flags.signFlag = 0;
     specifiers->flags.spaseFlag = 0;
     specifiers->flags.zeroFlag = 0;
