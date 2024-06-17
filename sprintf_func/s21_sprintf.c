@@ -8,6 +8,7 @@
 #define MAX_LEN_BUF 1000
 #define MAX_LEN_DOUBLE 400
 #define MAX_LEN_INT 50
+#define EPS 0.0000000001
 #define convertTypeByLength(specifiers, ap, a, type) \
     do { \
         if (specifiers->lenght.longIntFlag) { \
@@ -49,7 +50,7 @@ typedef struct {
     unsigned int maxLenghtResultString;
 } Specifiers;
 
-typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYUPHEX, MYOCT, MYPOINTER, PERSENT,} mySprintfTipes;
+typedef enum {MYINT, MYUINT, MYFLOAT, MYCHAR, MYSTRING, MYEXP, MYFLOATEXP, MYUPHEX, MYOCT, MYPOINTER, PERSENT,} mySprintfTipes;
 
 int s21_sprintf(char *buffer, const char *format, ...);
 
@@ -110,17 +111,17 @@ int main (void) {
     char company[] = "Umbrella Corp.";
     char status = 'Z';
     unsigned int salary = 0;
-    double coefficient = 0.0001;
+    double coefficient = 12577568.37;
     unsigned int group = 127;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
+    int charNumber = s21_sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.5e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %p Status: %c Reward: %05u Priority: %e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
+    charNumber = sprintf(text, "MAX Code: %*.*d Age: %-*.5d Employer: %s Status: %c Reward: %05u Priority: %.5e Group %#o!", 8, 6, a, 10, b, company, status, salary, coefficient, group);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -198,7 +199,11 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
         typeOption = MYEXP;
         result = converseFloatType(specifiers, ap, typeOption);
         result = s21_to_lower(result);
-        break;   
+        break;
+    case 'G':
+        typeOption = MYFLOATEXP;
+        result = converseFloatType(specifiers, ap, typeOption);
+        break;  
     case 'X':
         typeOption = MYUPHEX;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
@@ -368,6 +373,13 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
         doubleToFloatString(num, p, currentPrecicion);
     } else if (typeOption == MYEXP) {
         doubleToExpString(num, p, currentPrecicion);
+    } else if (typeOption == MYFLOATEXP) {
+        int lenght = getExpLength(num);
+        if (lenght >= currentPrecicion || lenght < -4) {
+            doubleToExpString(num, p, 5);
+        } else {
+            doubleToFloatString(num, p, currentPrecicion);
+        }
     }
     
     return buffer;
@@ -725,7 +737,7 @@ char* doubleToExpString(double num, char* str, int precision) {
         str[1] = '.';
         for (int i = 2; i < precision + 2; i++) {
             fracPart *= 10;
-            int digit = (int)fracPart;
+            int digit = (int)(fracPart + EPS);
             str[i] = '0' + digit;
             fracPart -= digit;
         }
