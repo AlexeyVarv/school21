@@ -456,7 +456,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     size_t spaceCount = specifiers->width;
     char *p;
     
-    if(specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
+    if(specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYUPHEX && !specifiers->flags.precisionFlag && !specifiers->flags.sharpFlag) ||(typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
         char *zeroString = malloc((spaceCount + 1) * sizeof(char));
         memset(zeroString, '0', spaceCount);
         p = zeroString;
@@ -476,7 +476,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         memcpy(p, str, strlen(str) + 1);
         free(str);
         return zeroString;
-    } else if (specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && (typeOption == MYUPHEX && !specifiers->flags.precisionFlag)) {
+    } else if (specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && (typeOption == MYUPHEX && !specifiers->flags.precisionFlag && specifiers->flags.sharpFlag)) {
         char *zeroString = malloc((spaceCount + 1) * sizeof(char));
         memset(zeroString, '0', spaceCount);
         p = zeroString;
@@ -489,11 +489,12 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
     } else {
         char *spaceString = malloc((spaceCount + 1) * sizeof(char));
         memset(spaceString, ' ', spaceCount);
+        spaceString[spaceCount] = '\0';
         p = spaceString;
         if (!specifiers->flags.leftSideFlag) {
             p += (spaceCount - strlen(str));
         }
-        memcpy(p, str, strlen(str) + 1);
+        memcpy(p, str, strlen(str));
         free(str);
         return spaceString;
     }
