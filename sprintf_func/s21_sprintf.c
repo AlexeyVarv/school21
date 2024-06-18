@@ -124,11 +124,11 @@ int main (void) {
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %10d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %15x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);  
+    int charNumber = s21_sprintf(text, "MAX Code: %-.5d Age: %+10d Employer: %.6s Status: %8c Reward: %-4u Priority: %#15g Group %018x Adress: %-25p!", a, b, company, status, salary, coefficient, group, ptr);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %10d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %15x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);
+    charNumber = sprintf(text, "MAX Code: %-.5d Age: %+10d Employer: %.6s Status: %8c Reward: %-4u Priority: %#15g Group %018x Adress: %-25p!", a, b, company, status, salary, coefficient, group, ptr);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -152,7 +152,7 @@ int s21_sprintf(char *buffer, const char *format, ...) {
             parseSpecifiers(&specifiers);
             bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format, typeOption);
             //printSpecifiers(&specifiers);
-            memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable));
+            memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
             buffer+= strlen(bufferFromVariable);
             format++;
             if (bufferFromVariable != NULL) {
@@ -177,32 +177,26 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'd':
         typeOption = MYINT;
         result = converseIntType(specifiers, ap);
-        printf("***Number: %s\n", result);
         break;
     case 's':
         typeOption = MYSTRING;
         result = converseStringType(specifiers, ap);
-        printf("***Number: %s\n", result);
         break;
     case 'c':
         typeOption = MYCHAR;
         result = converseCharType(specifiers, ap);
-        printf("***Number: %s\n", result);
         break;
     case 'u':
         typeOption = MYUINT;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
-        printf("***Number: %s\n", result);
         break;
     case 'f':
         typeOption = MYFLOAT;
         result = converseFloatType(specifiers, ap, typeOption);
-        printf("***Number: %s\n", result);
         break;
     case 'E':
         typeOption = MYEXP;
         result = converseFloatType(specifiers, ap, typeOption);
-        printf("***Number: %s\n", result);
         break;
     case 'e':
         typeOption = MYEXP;
@@ -221,13 +215,11 @@ char* makeStringFromVariable(Specifiers *specifiers, va_list ap, int cType, mySp
     case 'X':
         typeOption = MYUPHEX;
         result = converseUnsignedIntType(specifiers, ap, typeOption);
-        printf("***Number: %s\n", result);
         break;
     case 'x':
         typeOption = MYUPHEX; //Исправить, использовать функцию перевода строки в нижний регистр
         result = converseUnsignedIntType(specifiers, ap, typeOption);
         result = myToLower(result);
-        printf("***Number: %s\n", result);
         break;
     case 'o':
         typeOption = MYOCT;
@@ -273,19 +265,22 @@ char* converseCharType(Specifiers *specifiers, va_list ap) {
     }
     char *buffer = malloc(2 * sizeof(char));
     buffer[0] = ch;
-    
+    buffer[1] = '\0';
+
     return buffer;
 }
 
 //Возвращает указатель на строку по заданным спецификаторам включая точность
 char* converseStringType(Specifiers *specifiers, va_list ap) {
     char *str = va_arg(ap, char*);
-    char *buffer = malloc(sizeof(str) * sizeof(char));
+    size_t lenght = strlen(str);
+    char *buffer = malloc((lenght + 1) * sizeof(char));
     
     if (specifiers->flags.precisionFlag) {
         memcpy(buffer, str, specifiers->precision);
+        buffer[specifiers->precision] = '\0';
     } else {
-        memcpy(buffer, str, strlen(str) + 1);
+        memcpy(buffer, str, lenght + 1);
     }
         
     return buffer;
@@ -478,7 +473,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
             str[0] = '0';
         }
         p += (spaceCount - strlen(str));
-        memcpy(p, str, strlen(str));
+        memcpy(p, str, strlen(str) + 1);
         free(str);
         return zeroString;
     } else if (specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && (typeOption == MYUPHEX && !specifiers->flags.precisionFlag)) {
@@ -488,7 +483,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         *(p + 1) = 'x';
         str[1] = '0';
         p += (spaceCount - strlen(str));
-        memcpy(p, str, strlen(str));
+        memcpy(p, str, strlen(str) + 1);
         free(str);
         return zeroString;
     } else {
@@ -498,7 +493,7 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         if (!specifiers->flags.leftSideFlag) {
             p += (spaceCount - strlen(str));
         }
-        memcpy(p, str, strlen(str));
+        memcpy(p, str, strlen(str) + 1);
         free(str);
         return spaceString;
     }
