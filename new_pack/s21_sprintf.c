@@ -585,7 +585,7 @@ int getDoublePartLength(long double integerPart) {
     do {
         integerPart /= 10;
         length++;
-    } while (integerPart > 1);
+    } while (integerPart >= 1);
     
     return length;
 }

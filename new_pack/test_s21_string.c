@@ -173,9 +173,8 @@ START_TEST(test_sprintf_5)
     int testNum = s21_sprintf(testString1, "MAX Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
     int controlNum = sprintf(testString2, "MAX Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
     ck_assert_str_eq(testString1, testString2);
-
     ck_assert_int_eq(testNum, controlNum);
-    //ck_assert_str_eq(testString1, testString2);
+    
 }
 END_TEST
 
@@ -191,15 +190,34 @@ START_TEST(test_sprintf_6)
     float coefficient = 156412.0000015;
     unsigned int group = 4294967290;
     void *ptr = &a;
-    int testNum = s21_sprintf(testString1, "MAX %% Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
-    int controlNum = sprintf(testString2, "MAX %% Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int testNum = s21_sprintf(testString1, "MAX %% Code: %d Age: %5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int controlNum = sprintf(testString2, "MAX %% Code: %d Age: %5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    ck_assert_str_eq(testString1, testString2);
+    ck_assert_int_eq(testNum, controlNum);
+    
+}
+END_TEST
+
+START_TEST(test_sprintf_7)
+{
+    char testString1[500];
+    char testString2[500];
+    int a = -2147483;
+    float b = 0.00000;
+    char company[] = "Umbrella Corp.";
+    char status = 'Z';
+    unsigned int salary = 0;
+    float coefficient = 156412.0000015;
+    unsigned int group = 4294967290;
+    void *ptr = &a;
+    int testNum = s21_sprintf(testString1, "MAX %% Code: %015d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %#015X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int controlNum = sprintf(testString2, "MAX %% Code: %015d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %#015X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
     ck_assert_str_eq(testString1, testString2);
 
     ck_assert_int_eq(testNum, controlNum);
     //ck_assert_str_eq(testString1, testString2);
 }
 END_TEST
-
 
 Suite *example_suite_create(void)
 {
@@ -221,6 +239,7 @@ Suite *example_suite_create(void)
     tcase_add_test(tcase_core_sprintf, test_sprintf_4);
     tcase_add_test(tcase_core_sprintf, test_sprintf_5);
     tcase_add_test(tcase_core_sprintf, test_sprintf_6);
+    tcase_add_test(tcase_core_sprintf, test_sprintf_7);
     // Добавление теста в тестовый набор.
     suite_add_tcase(suite, tcase_core_strings);
     suite_add_tcase(suite, tcase_core_sscanf);
