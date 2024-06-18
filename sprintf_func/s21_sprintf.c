@@ -118,17 +118,17 @@ int main (void) {
     char status = 'Z';
     unsigned int salary = 0;
     double coefficient = .00000000105000;
-    unsigned int group = 127;
+    unsigned int group = 1276;
     int *ptr = &a;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);  
+    int charNumber = s21_sprintf(text, "MAX Code: %10d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %15x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);
+    charNumber = sprintf(text, "MAX Code: %10d Age: %d Employer: %s Status: %c Reward: %u Priority: %g Group %15x Adress: %p!", a, b, company, status, salary, coefficient, group, ptr);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -146,16 +146,18 @@ int s21_sprintf(char *buffer, const char *format, ...) {
     while(*format) {
         resetSpecifiers(&specifiers);
         if (*format == '%') {
-            char *bufferFromVariable;
+            char *bufferFromVariable = NULL;
             format++;
             format = makeSpecifires(format, &specifiers);
             parseSpecifiers(&specifiers);
             bufferFromVariable = makeStringFromVariable(&specifiers, ap, *format, typeOption);
             //printSpecifiers(&specifiers);
-            memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable) + 1);
+            memcpy(buffer, bufferFromVariable, strlen(bufferFromVariable));
             buffer+= strlen(bufferFromVariable);
             format++;
-            free(bufferFromVariable);
+            if (bufferFromVariable != NULL) {
+                free(bufferFromVariable);
+            }
         } else {
             *buffer++ = *format++;
         }
@@ -457,13 +459,11 @@ char* conversePointerType(va_list ap) {
 //Выводит строку в зависимости от заданной ширины
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption) {
     size_t spaceCount = specifiers->width;
-    char *spaceString = malloc((spaceCount + 1) * sizeof(char));
-    memset(spaceString, ' ', spaceCount);
-    char *zeroString = malloc((spaceCount + 1) * sizeof(char));
-    memset(zeroString, '0', spaceCount);
     char *p;
     
     if(specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && ((typeOption == MYINT && !specifiers->flags.precisionFlag) || (typeOption == MYOCT && !specifiers->flags.precisionFlag) || typeOption == MYFLOAT || typeOption == MYFLOATEXP || typeOption == MYEXP || typeOption == MYUINT)) {
+        char *zeroString = malloc((spaceCount + 1) * sizeof(char));
+        memset(zeroString, '0', spaceCount);
         p = zeroString;
         if (specifiers->flags.signFlag && str[0] != '-' && typeOption != MYUINT && typeOption != MYOCT) {
             *p = '+';
@@ -479,20 +479,27 @@ char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintf
         }
         p += (spaceCount - strlen(str));
         memcpy(p, str, strlen(str));
+        free(str);
         return zeroString;
     } else if (specifiers->flags.zeroFlag && !specifiers->flags.leftSideFlag && (typeOption == MYUPHEX && !specifiers->flags.precisionFlag)) {
+        char *zeroString = malloc((spaceCount + 1) * sizeof(char));
+        memset(zeroString, '0', spaceCount);
         p = zeroString;
         *(p + 1) = 'x';
         str[1] = '0';
         p += (spaceCount - strlen(str));
         memcpy(p, str, strlen(str));
+        free(str);
         return zeroString;
     } else {
+        char *spaceString = malloc((spaceCount + 1) * sizeof(char));
+        memset(spaceString, ' ', spaceCount);
         p = spaceString;
         if (!specifiers->flags.leftSideFlag) {
             p += (spaceCount - strlen(str));
         }
         memcpy(p, str, strlen(str));
+        free(str);
         return spaceString;
     }
 }
