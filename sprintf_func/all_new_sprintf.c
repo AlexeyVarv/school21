@@ -9,16 +9,6 @@
 #define MAX_LEN_DOUBLE 400
 #define MAX_LEN_INT 50
 #define EPS 0.0000000001
-#define convertTypeByLength(specifiers, ap, a, type) \
-    do { \
-        if (specifiers->lenght.longIntFlag) { \
-            *(type*)(a) = (type)va_arg(ap, long int); \
-        } else if (specifiers->lenght.shortFlag) { \
-            *(type*)(a) = (type)(short int)va_arg(ap, int); \
-        } else { \
-            *(type*)(a) = (type)va_arg(ap, int); \
-        } \
-    } while(0)
 
 typedef struct {
     int leftSideFlag;
@@ -86,23 +76,23 @@ int getIntegerPartLength(unsigned long long integerPart, int dividor);
 
 int getDoublePartLength(long double integerPart);
 
-double roundToNDecimalPlaces(double num, int n);
+double roundToNDecimalPlaces(long double num, int n);
 
-char* intToString(int num, char *str, int precision);
+char* intToString(unsigned long int num, char *str, int precision);
 
 char* hexUpToString(unsigned long long num, char *str, int precision);
 
 char* octToString(unsigned long long num, char *str, int precision);
 
-char* doubleToFloatString(double num, char* str, int precision);
+char* doubleToFloatString(long double num, char* str, int precision);
 
-char* doubleToExpString(double num, char* str, int precision);
+char* doubleToExpString(long double num, char* str, int precision);
 
 void removeExpZeros(char* str);
 
 void removeTrailingZeros(char* str);
 
-int getExpLength(double num);
+int getExpLength(long double num);
 
 char* converseByFlagsWigthSpecifier(Specifiers *specifiers, char* str, mySprintfTipes typeOption);
 
@@ -112,19 +102,19 @@ char *myToLower(char *str);
 
 
 int main (void) {
-    int a = 15;
+    int a = 2147483647;
     int b = 0;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
-    unsigned int salary = 0;
+    unsigned int salary = 4294967290;
     double coefficient = .00000000105000;
-    unsigned int group = 1276;
+    unsigned int group = 4294967290;
     int *ptr = &a;
 
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %-.5d Age: %.d Employer: %-20s Status: %8c Reward: %-4u Priority: %015g Group %018x Adress: %-25p!", a, b, company, status, salary, coefficient, group, ptr);  
+    int charNumber = s21_sprintf(text, "MAX Code: %-.5ld Age: %.d Employer: %-20s Status: %8c Reward: %-4lu Priority: %015g Group %018x Adress: %-25p!", a, b, company, status, salary, coefficient, group, ptr);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
@@ -322,8 +312,12 @@ char* converseUnsignedIntType(Specifiers *specifiers, va_list ap, mySprintfTipes
     char *buffer = malloc(MAX_LEN_INT * sizeof(char));
     char* p = buffer;
     unsigned int a;
-    convertTypeByLength(specifiers, ap, &a, unsigned int);
-
+    if (specifiers->lenght.longIntFlag) {
+        a = va_arg(ap, long int);
+        a = (unsigned long int)a;
+    } else {
+        a = va_arg(ap, int);
+    }
     if (a < 0) {
         perror("Error: The variable must not be negative");
         exit(1);
@@ -676,7 +670,7 @@ int isTypeSymbol(Specifiers *specifiers, char c) {
 }
 
 //Переводит int в строку с заданной точностью
-char* intToString(int num, char *str, int precision){
+char* intToString(unsigned long int num, char *str, int precision){
     int integerLength = getIntegerPartLength(num, 10);
     if (precision > integerLength) {
         integerLength = precision;
@@ -745,13 +739,13 @@ int getDoublePartLength(long double integerPart) {
     return length;
 }
 
-double roundToNDecimalPlaces(double num, int n) {
+double roundToNDecimalPlaces(long double num, int n) {
     double multiplier = pow(10.0, n);
     return round(num * (multiplier )) / multiplier;
 }
 
 // Функция для перевода дробного числа в строку с плавающей точкой
-char* doubleToFloatString(double num, char* str, int precision) {
+char* doubleToFloatString(long double num, char* str, int precision) {
     num = roundToNDecimalPlaces(num, precision);
     double intPart;
     double fracPart = modf(num, &intPart); //Стандартная функция, разделяет число с плавающей точкой на 2 числа double - целую и дробную часть
@@ -778,7 +772,7 @@ char* doubleToFloatString(double num, char* str, int precision) {
 }
 
 //Возвращает число цифр целого
-int getExpLength(double num) {
+int getExpLength(long double num) {
     int length = 0;
     if (num == 0) {
         return 0;
@@ -800,7 +794,7 @@ int getExpLength(double num) {
 }
 
 //Функция для перевода дробного числа в строку с экспоненциальной записью
-char* doubleToExpString(double num, char* str, int precision) {
+char* doubleToExpString(long double num, char* str, int precision) {
     int expLength = getExpLength(num);
     num = num * pow(10, -expLength);
     num = roundToNDecimalPlaces(num, precision);
