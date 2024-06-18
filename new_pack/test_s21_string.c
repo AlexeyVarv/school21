@@ -82,7 +82,7 @@ START_TEST(test_strncmp)
 }
 END_TEST
 
-START_TEST(test_sprintf)
+START_TEST(test_sprintf_1)
 {
     char testString1[500];
     char testString2[500];
@@ -90,14 +90,113 @@ START_TEST(test_sprintf)
     int b = 0;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
-    unsigned int salary = 4294967290;
+    unsigned int salary = 42583;
     double coefficient = .00000000105000;
     unsigned int group = 4294967290;
     void *ptr = &a;
-    int testNum = s21_sprintf(testString1, "MAX Code: %-.5ld Age: %.d Employer: %-20s Status: %8c Reward: %-4lu Priority: %015g Group %018x Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int testNum = s21_sprintf(testString1, "MAX Code: %-.5ld Age: %.d Employer: %-20s Status: %8c Reward: %-4u Priority: %015g Group %018x Adress %p", a, b, company, status, salary, coefficient, group, ptr);
     int controlNum = sprintf(testString2, "MAX Code: %-.5d Age: %.d Employer: %-20s Status: %8c Reward: %-4u Priority: %015g Group %018x Adress %p", a, b, company, status, salary, coefficient, group, ptr);
     ck_assert_int_eq(testNum, controlNum);
     ck_assert_str_eq(testString1, testString2);
+}
+END_TEST
+
+START_TEST(test_sprintf_2)
+{
+    char testString1[500];
+    char testString2[500];
+    int a = 2147483647;
+    float b = 0.159;
+    char company[] = "Umbrella Corp.";
+    char status = 'Z';
+    unsigned int salary = 0;
+    float coefficient = 1.000000;
+    unsigned int group = 4294967290;
+    void *ptr = &a;
+    int testNum = s21_sprintf(testString1, "MAX Code: %10.d Age: %.f Employer: %-20s Status: %8c Reward: %.u Priority: %015g Group %#18o Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int controlNum = sprintf(testString2, "MAX Code: %10.d Age: %.f Employer: %-20s Status: %8c Reward: %.u Priority: %015g Group %#18o Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    ck_assert_int_eq(testNum, controlNum);
+    ck_assert_str_eq(testString1, testString2);
+}
+END_TEST
+
+START_TEST(test_sprintf_3)
+{
+    char testString1[500];
+    char testString2[500];
+    int a = 2147483647;
+    float b = 15250.159;
+    char company[] = "Umbrella Corp.";
+    char status = 'Z';
+    unsigned int salary = 0;
+    float coefficient = 156412.0000015;
+    unsigned int group = 4294967290;
+    void *ptr = &a;
+    int testNum = s21_sprintf(testString1, "MAX Code: %10.d Age: %5.5E Employer: %-20s Status: %8c Reward: %.u Priority: %015.0e Group %o Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int controlNum = sprintf(testString2, "MAX Code: %10.d Age: %5.5E Employer: %-20s Status: %8c Reward: %.u Priority: %015.0e Group %o Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    ck_assert_int_eq(testNum, controlNum);
+    ck_assert_str_eq(testString1, testString2);
+}
+END_TEST
+
+START_TEST(test_sprintf_4)
+{
+    char testString1[500];
+    char testString2[500];
+    int a = 2147483647;
+    float b = 15250.159;
+    char company[] = "Umbrella Corp.";
+    char status = 'Z';
+    unsigned int salary = 0;
+    float coefficient = 156412.0000015;
+    unsigned int group = 4294967290;
+    void *ptr = &a;
+    int testNum = s21_sprintf(testString1, "MAX Code: %+10.d Age: % 5.5E Employer: %-20s Status: %8c Reward: %.u Priority: %015.0e Group %0X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int controlNum = sprintf(testString2, "MAX Code: %+10.d Age: % 5.5E Employer: %-20s Status: %8c Reward: %.u Priority: %015.0e Group %0X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    ck_assert_int_eq(testNum, controlNum);
+    ck_assert_str_eq(testString1, testString2);
+}
+END_TEST
+
+START_TEST(test_sprintf_5)
+{
+    char testString1[500];
+    char testString2[500];
+    int a = -2147483;
+    float b = 15250.00000;
+    char company[] = "Umbrella Corp.";
+    char status = 'Z';
+    unsigned int salary = 0;
+    float coefficient = 156412.0000015;
+    unsigned int group = 4294967290;
+    void *ptr = &a;
+    int testNum = s21_sprintf(testString1, "MAX Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int controlNum = sprintf(testString2, "MAX Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    ck_assert_str_eq(testString1, testString2);
+
+    ck_assert_int_eq(testNum, controlNum);
+    //ck_assert_str_eq(testString1, testString2);
+}
+END_TEST
+
+START_TEST(test_sprintf_6)
+{
+    char testString1[500];
+    char testString2[500];
+    int a = -2147483;
+    float b = 15250.00000;
+    char company[] = "Umbrella Corp.";
+    char status = 'Z';
+    unsigned int salary = 0;
+    float coefficient = 156412.0000015;
+    unsigned int group = 4294967290;
+    void *ptr = &a;
+    int testNum = s21_sprintf(testString1, "MAX %% Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    int controlNum = sprintf(testString2, "MAX %% Code: %d Age: % 5.5G Employer: %.6s Status: %8c Reward: %.u Priority: %015.0e Group %X Adress %p", a, b, company, status, salary, coefficient, group, ptr);
+    ck_assert_str_eq(testString1, testString2);
+
+    ck_assert_int_eq(testNum, controlNum);
+    //ck_assert_str_eq(testString1, testString2);
 }
 END_TEST
 
@@ -116,7 +215,12 @@ Suite *example_suite_create(void)
     tcase_add_test(tcase_core_strings, test_strncpy);
     tcase_add_test(tcase_core_strings, test_strncmp);
 
-    tcase_add_test(tcase_core_sprintf, test_sprintf);
+    tcase_add_test(tcase_core_sprintf, test_sprintf_1);
+    tcase_add_test(tcase_core_sprintf, test_sprintf_2);
+    tcase_add_test(tcase_core_sprintf, test_sprintf_3);
+    tcase_add_test(tcase_core_sprintf, test_sprintf_4);
+    tcase_add_test(tcase_core_sprintf, test_sprintf_5);
+    tcase_add_test(tcase_core_sprintf, test_sprintf_6);
     // Добавление теста в тестовый набор.
     suite_add_tcase(suite, tcase_core_strings);
     suite_add_tcase(suite, tcase_core_sscanf);

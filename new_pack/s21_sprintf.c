@@ -473,25 +473,6 @@ void parseSpecifiers(Specifiers *specifiers) {
     checkSpecifiersParameters(specifiers, &countPrecision);
 }
 
-//Печать флагов, ширины, точности, длины
-void printSpecifiers(const Specifiers *specifiers) {
-    printf("Flags:\n");
-    printf("leftSideFlag: %d\n", specifiers->flags.leftSideFlag);
-    printf("SignFlag: %d\n", specifiers->flags.signFlag);
-    printf("SpaseFlag: %d\n", specifiers->flags.spaseFlag);
-    printf("ZeroFlag: %d\n", specifiers->flags.zeroFlag);
-    printf("SharpFlag: %d\n", specifiers->flags.sharpFlag);
-    printf("PresicionFlag: %d\n", specifiers->flags.precisionFlag);
-    printf("Width: %u\n", specifiers->width);
-    printf("Precision: %u\n", specifiers->precision);
-    printf("Length:\n");
-    printf("ShortFlag: %d\n", specifiers->lenght.shortFlag);
-    printf("LongIntFlag: %d\n", specifiers->lenght.longIntFlag);
-    printf("LongDoubleFlag: %d\n", specifiers->lenght.longDoubleFlag);
-    printf("Buffer lenght: %u\n", specifiers->maxLenghtResultString);
-    printf("***Spesifire: %s\n", specifiers->specifiersString);
-}
-
 //Сброс структуры спецификатора в ноль, установка параметров
 void resetSpecifiers(Specifiers *specifiers) {
     specifiers->flags.leftSideFlag = 0;
@@ -702,8 +683,9 @@ char* doubleToExpString(long double num, char* str, int precision) {
 
 //Возвращает знак %
 char* percentToString() {
-    char *strPersent = "%";
-    
+    char *strPersent = malloc(2);
+    strPersent[0] = '%';
+    strPersent[1] = '\0';
     return strPersent; 
 }
 
