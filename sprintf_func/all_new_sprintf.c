@@ -102,7 +102,7 @@ char *myToLower(char *str);
 
 
 int main (void) {
-    int a = 2147483647;
+    int a = -2147483647;
     int b = 0;
     char company[] = "Umbrella Corp.";
     char status = 'Z';
