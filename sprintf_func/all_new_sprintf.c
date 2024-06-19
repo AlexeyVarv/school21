@@ -8,7 +8,7 @@
 #define MAX_LEN_BUF 1000
 #define MAX_LEN_DOUBLE 400
 #define MAX_LEN_INT 50
-#define EPS 0.0000000001
+#define EPS 0.000000001
 
 typedef struct {
     int leftSideFlag;
@@ -88,9 +88,9 @@ char* doubleToFloatString(long double num, char* str, int precision);
 
 char* doubleToExpString(long double num, char* str, int precision);
 
-void removeExpZeros(char* str);
+void removeExpZeros(char* str, Specifiers *specifiers);
 
-void removeTrailingZeros(char* str);
+void removeTrailingZeros(char* str, Specifiers* specifiers);
 
 int getExpLength(long double num);
 
@@ -102,23 +102,15 @@ char *myToLower(char *str);
 
 
 int main (void) {
-    int a = -2147483647;
-    int b = 0;
-    char company[] = "Umbrella Corp.";
-    char status = 'Z';
-    unsigned int salary = 4294967290;
-    double coefficient = .00000000105000;
-    unsigned int group = 4294967290;
-    int *ptr = &a;
-
+    double c = 156.000000000;
     
     char text[MAX_LEN_BUF];
     
-    int charNumber = s21_sprintf(text, "MAX Code: %-.5ld Age: %.d Employer: %-20s Status: %8c Reward: %-4lu Priority: %015g Group %018x Adress: %-25p!", a, b, company, status, salary, coefficient, group, ptr);  
+    int charNumber = s21_sprintf(text, "MAX Code: %g Age: %#.1g Employer: %-15g Status: %15.8g Reward: %015g Priority: %#0g Group % #20.1g Adress: %+20g!", c, c, c, c, c, c, c, c);  
     printf ("Mysprintf: %s\n", text);
     printf("text length: %d\n", charNumber);
     printf("\n");
-    charNumber = sprintf(text, "MAX Code: %-.5d Age: %.d Employer: %-20s Status: %8c Reward: %-4u Priority: %015g Group %018x Adress: %-25p!", a, b, company, status, salary, coefficient, group, ptr);
+    charNumber = sprintf(text, "MAX Code: %g Age: %#.1g Employer: %-15g Status: %15.8g Reward: %015g Priority: %#g Group % #20.1g Adress: %+20g!", c, c, c, c, c, c, c, c);
     printf ("Control: %s\n", text);
     printf("text length: %d\n", charNumber);
     
@@ -380,57 +372,65 @@ char* converseFloatType(Specifiers *specifiers, va_list ap, mySprintfTipes typeO
     } else if (typeOption == MYFLOATEXP) {
         int lenght = getExpLength(num);
         if (lenght >= currentPrecicion || lenght < -4) {
-            doubleToExpString(num, p, currentPrecicion - 1);
-            if (!specifiers->flags.sharpFlag) {
-                removeExpZeros(buffer);
+            if (currentPrecicion == 0) {
+                doubleToExpString(num, p, currentPrecicion);
+            } else {
+                doubleToExpString(num, p, currentPrecicion - 1);
             }
+            removeExpZeros(buffer, specifiers);
         } else {
-            doubleToFloatString(num, p, currentPrecicion - (lenght + 1));
-            if (!specifiers->flags.sharpFlag) {
-                removeTrailingZeros(buffer);
+            if (currentPrecicion == 0) {
+                doubleToFloatString(num, p, currentPrecicion + 1);
+            } else {
+                doubleToFloatString(num, p, currentPrecicion - (lenght + 1));
             }
+            removeTrailingZeros(buffer, specifiers);
         }
     }
     
     return buffer;
 }
 
-void removeExpZeros(char* str) {
-    char* ePos = strchr(str, 'E'); // Находим символ 'E'
+void removeExpZeros(char* str, Specifiers* specifiers) {
+    char* ePos = strchr(str, 'E');
 
     if (ePos == NULL) {
-        return; // 'E' не найден, выходим
+        return;
     }
-    char* currPos = ePos - 1; // Указатель на символ перед 'E'
-
-    // Проходим от 'E' к началу строки
-    while (currPos && *currPos == '0') {
-        // Если текущий символ - ноль, удаляем его
-        memmove(currPos, currPos + 1, strlen(currPos));
-        currPos--;
+    char* currPos = ePos - 1;
+    if (!specifiers->flags.sharpFlag) {
+        while (currPos && *currPos == '0') {
+            memcpy(currPos, currPos + 1, strlen(currPos) + 1);
+            currPos--;
+        }
+    } else {
+        if (specifiers->precision <= 1) {
+            memcpy(ePos + 1, ePos, strlen(ePos) + 1);
+            *(ePos) = '.';
+        }
     }
 }
 
-void removeTrailingZeros(char* str) {
+void removeTrailingZeros(char* str, Specifiers* specifiers) {
     int len = strlen(str);
-    char* dotPos = strchr(str, '.'); // Находим символ '.'
-
-    if (dotPos == NULL) {
-        return; // '.' не найден, выходим
-    }
-
-    char* currPos = str + len - 1; // Указатель на последний символ
-
-    // Проходим от конца строки к началу
-    while (currPos > dotPos && *currPos == '0') {
-        // Если текущий символ - ноль, удаляем его
-        *currPos = '\0';
-        currPos--;
-    }
-
-    // Если последний символ оказался точкой, удаляем её тоже
-    if (*currPos == '.') {
-        *currPos = '\0';
+    char* dotPos = strchr(str, '.');
+    if (!specifiers->flags.sharpFlag) {
+            if (dotPos == NULL) {
+            return;
+        }
+        char* currPos = str + len - 1;
+        while (currPos > dotPos && *currPos == '0') {
+            *currPos = '\0';
+            currPos--;
+        }
+        if (*currPos == '.') {
+            *currPos = '\0';
+        }
+    } else {
+        if (dotPos == NULL) {
+            str[len] = '.';
+            str[len + 1] = '\0';
+        }
     }
 }
 
@@ -518,10 +518,6 @@ void checkSpecifiersParameters(Specifiers *specifiers, size_t *count) {
 //Опеределение всех спецификаторов и запись параметров в структуру
 void parseSpecifiers(Specifiers *specifiers) {
     const char *p = specifiers->specifiersString;
-    char strWidth[20] = "0";
-    int widthIndex = 0;
-    char strPrecision[20] = "0";
-    int precisionIndex = 0;
     size_t countPrecision = 0;
     while(*p) {
         while (strchr(specifiers->strFlags, *p) && *p != '\0') {
@@ -545,13 +541,11 @@ void parseSpecifiers(Specifiers *specifiers) {
             p++;
             countPrecision++;
         }
-        while(isdigit(*p)) {
-            strWidth[widthIndex] = *p;
-            widthIndex++;
+        while (*p >= '0' && *p <= '9') {
+            specifiers->width = specifiers->width * 10 + (*p - '0');
             p++;
             countPrecision++;
         }
-        strWidth[widthIndex] = '\0';
         if (*p == '*') {
             specifiers->flags.widthArgumentFlag = 1;
             p++;
@@ -562,9 +556,8 @@ void parseSpecifiers(Specifiers *specifiers) {
             p++;
             countPrecision++;
         }
-        while(isdigit(*p)) {
-            strPrecision[precisionIndex] = *p;
-            precisionIndex++;
+        while (*p >= '0' && *p <= '9') {
+            specifiers->precision = specifiers->precision * 10 + (*p - '0');
             p++;
             countPrecision++;
         }
@@ -573,7 +566,6 @@ void parseSpecifiers(Specifiers *specifiers) {
             p++;
             countPrecision++;
         }
-        strPrecision[precisionIndex] = '\0';
         if (strchr(specifiers->strfLengthDescription, *p) && *p != '\0') {
             switch(*p) {
             case 'h': 
@@ -594,12 +586,7 @@ void parseSpecifiers(Specifiers *specifiers) {
             p++;
         }
     }
-    if (strWidth[0]) {
-        specifiers->width = strtol(strWidth, NULL, 10);
-    }
-    if (strPrecision[0]) {
-        specifiers->precision = strtol(strPrecision, NULL, 10);
-    }
+    
     checkSpecifiersParameters(specifiers, &countPrecision);
 }
 
@@ -734,7 +721,7 @@ int getDoublePartLength(long double integerPart) {
     do {
         integerPart /= 10;
         length++;
-    } while (integerPart > 1);
+    } while (integerPart >= 1);
     
     return length;
 }
@@ -759,7 +746,7 @@ char* doubleToFloatString(long double num, char* str, int precision) {
         str[integerLength] = '.';
         for (int i = integerLength + 1; i < integerLength + precision + 1; i++) {
             fracPart *= 10;
-            int digit = (int)fracPart;
+            int digit = (int)(fracPart + EPS);
             str[i] = '0' + digit;
             fracPart -= digit;
         }
@@ -847,4 +834,15 @@ char* myToLower(char *str) {
   }
 
   return str;
+}
+
+int myStrtol(const char *ptr) {
+    int result = 0;
+    // Преобразование строки в число
+    while (*ptr >= '0' && *ptr <= '9') {
+        result = result * 10 + (*ptr - '0');
+        ptr++;
+    }
+
+    return result;
 }
