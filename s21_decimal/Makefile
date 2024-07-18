@@ -28,7 +28,7 @@ $(CONVERSE_O): $(CONVERSE_C) $(MAIN_H)
 
 
 clang:
-	clang-format -i $(MAIN_C) $(MATH_C) $(MAIN_H)
+	clang-format -i $(MAIN_C) $(MATH_C) $(CONVERSE_C) $(MAIN_H)
 
 clean:
 	rm -rf $(ODIR)*.o
